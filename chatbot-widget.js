@@ -106,7 +106,7 @@
     if (typing) typing.remove();
   }
 
-  async function sendMessage() {
+    async function sendMessage() {
     if (sending) return;
     const text = inputEl.value.trim();
     if (!text) return;
@@ -116,15 +116,55 @@
     inputEl.value = "";
     addTyping();
 
+    // ---- RAG-style context from the current page ----
+    const pageUrl = window.location.href;
+    const site = window.location.hostname;
+    const title = document.title || "";
+    const metaDescription = Array.from(
+      document.querySelectorAll("meta[name='description']")
+    )
+      .map(m => m.content)
+      .join(" ");
+    // lightweight body text, trimmed to avoid huge payload
+    const bodyText = (document.body?.innerText || "")
+      .replace(/\s+/g, " ")
+      .slice(0, 1200);
+
+    const context = [
+      `PAGE TITLE: ${title}`,
+      `META: ${metaDescription}`,
+      `URL: ${pageUrl}`,
+      `SNIPPET: ${bodyText}`
+    ].join("\n\n");
+
     try {
       const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, text })
+        body: JSON.stringify({
+          sessionId,
+          text,
+          pageUrl,
+          site,
+          context
+        })
       });
 
       const data = await res.json().catch(() => ({}));
       removeTyping();
+
+      // daily limit hit
+      if (res.status === 429) {
+        addMessage(
+          data.message ||
+          "Daily chat limit has been reached for this site. Please try again tomorrow.",
+          "bot"
+        );
+        // optional: disable input
+        inputEl.disabled = true;
+        sendBtn.disabled = true;
+        return;
+      }
 
       if (res.ok && data && data.text) {
         addMessage(data.text, "bot");
@@ -140,12 +180,3 @@
       sending = false;
     }
   }
-
-  sendBtn.addEventListener("click", sendMessage);
-  inputEl.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      sendMessage();
-    }
-  });
-})();
