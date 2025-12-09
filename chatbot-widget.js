@@ -1,11 +1,27 @@
 // chatbot-widget.js
 (function () {
   // ---- CONFIG ----
+  // Make sure this is your correct HTTPS backend URL
   const API_URL = "https://mascot.academictechnexus.com/chat";
-  const sessionId = "sess_" + Math.random().toString(36).slice(2, 10);
+
+  // Get or create a persistent session ID per browser
+  function getOrCreateSessionId() {
+    const KEY = "mascot_session_id";
+    try {
+      const existing = localStorage.getItem(KEY);
+      if (existing) return existing;
+      const id = "sess-" + Math.random().toString(36).slice(2) + "-" + Date.now();
+      localStorage.setItem(KEY, id);
+      return id;
+    } catch (e) {
+      // If localStorage fails, fall back to random per load
+      return "sess-" + Math.random().toString(36).slice(2) + "-" + Date.now();
+    }
+  }
+  const sessionId = getOrCreateSessionId();
 
   // Resolve CSS path based on where this script is hosted
-  const scriptEl = document.currentScript;
+  const scriptEl = document.currentScript || document.querySelector('script[src*="chatbot-widget"]');
   const cssHref = scriptEl
     ? new URL("chatbot-widget.css", scriptEl.src).href
     : "chatbot-widget.css";
@@ -110,6 +126,12 @@
     if (typing) typing.remove();
   }
 
+  // Figure out site identifier (supports data-site override for demos)
+  const siteOverride = scriptEl && scriptEl.dataset ? scriptEl.dataset.site : null;
+  const siteId = siteOverride && siteOverride.trim()
+    ? siteOverride.trim()
+    : window.location.hostname;
+
   // ---- SEND MESSAGE (with RAG context + limit handling) ----
   async function sendMessage() {
     if (sending) return;
@@ -123,7 +145,6 @@
 
     // light RAG-style context from the current page
     const pageUrl = window.location.href;
-    const site = window.location.hostname;
     const title = document.title || "";
     const metaDescription = Array.from(
       document.querySelectorAll("meta[name='description']")
@@ -149,7 +170,7 @@
           sessionId,
           text,
           pageUrl,
-          site,
+          site: siteId,
           context,
         }),
       });
