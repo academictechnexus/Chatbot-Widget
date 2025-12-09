@@ -21,7 +21,7 @@
   launcher.type = "button";
   launcher.className = "cb-launcher";
 
-  // Simple chat icon as inline SVG (no external file)
+  // simple chat icon as inline SVG (no external assets)
   launcher.innerHTML = `
     <span class="cb-launcher-icon">
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -71,7 +71,10 @@
     wrapper.style.display = isOpen ? "flex" : "none";
 
     if (isOpen && !hasGreeted) {
-      addMessage("Hello! I'm your AI assistant. How can I help you today?", "bot");
+      addMessage(
+        "Hello! I'm your AI assistant. How can I help you today?",
+        "bot"
+      );
       hasGreeted = true;
       inputEl.focus();
     }
@@ -83,7 +86,8 @@
   // ---- MESSAGE HELPERS ----
   function addMessage(text, sender) {
     const bubble = document.createElement("div");
-    bubble.className = "cb-msg " + (sender === "user" ? "cb-msg-user" : "cb-msg-bot");
+    bubble.className =
+      "cb-msg " + (sender === "user" ? "cb-msg-user" : "cb-msg-bot");
     bubble.textContent = text;
     messagesEl.appendChild(bubble);
     messagesEl.scrollTop = messagesEl.scrollHeight;
@@ -106,7 +110,8 @@
     if (typing) typing.remove();
   }
 
-    async function sendMessage() {
+  // ---- SEND MESSAGE (with RAG context + limit handling) ----
+  async function sendMessage() {
     if (sending) return;
     const text = inputEl.value.trim();
     if (!text) return;
@@ -116,16 +121,15 @@
     inputEl.value = "";
     addTyping();
 
-    // ---- RAG-style context from the current page ----
+    // light RAG-style context from the current page
     const pageUrl = window.location.href;
     const site = window.location.hostname;
     const title = document.title || "";
     const metaDescription = Array.from(
       document.querySelectorAll("meta[name='description']")
     )
-      .map(m => m.content)
+      .map((m) => m.content)
       .join(" ");
-    // lightweight body text, trimmed to avoid huge payload
     const bodyText = (document.body?.innerText || "")
       .replace(/\s+/g, " ")
       .slice(0, 1200);
@@ -134,7 +138,7 @@
       `PAGE TITLE: ${title}`,
       `META: ${metaDescription}`,
       `URL: ${pageUrl}`,
-      `SNIPPET: ${bodyText}`
+      `SNIPPET: ${bodyText}`,
     ].join("\n\n");
 
     try {
@@ -146,8 +150,8 @@
           text,
           pageUrl,
           site,
-          context
-        })
+          context,
+        }),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -157,27 +161,41 @@
       if (res.status === 429) {
         addMessage(
           data.message ||
-          "Daily chat limit has been reached for this site. Please try again tomorrow.",
+            "Daily chat limit has been reached for this site. Please try again tomorrow.",
           "bot"
         );
-        // optional: disable input
         inputEl.disabled = true;
         sendBtn.disabled = true;
         return;
       }
 
-      if (res.ok && data && data.text) {
-        addMessage(data.text, "bot");
+      if (res.ok && data && (data.reply || data.text)) {
+        const replyText = data.reply || data.text;
+        addMessage(replyText, "bot");
       } else {
         console.error("Bad response from backend:", data);
-        addMessage("Sorry, I couldn't get a response from the server.", "bot");
+        addMessage(
+          "Sorry, I couldn't get a response from the server.",
+          "bot"
+        );
       }
     } catch (err) {
       console.error("Request failed:", err);
       removeTyping();
-      addMessage("Network error: please try again in a moment.", "bot");
+      addMessage(
+        "Network error: please try again in a moment.",
+        "bot"
+      );
     } finally {
       sending = false;
     }
   }
 
+  sendBtn.addEventListener("click", sendMessage);
+  inputEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+})();
