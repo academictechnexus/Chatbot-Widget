@@ -1,7 +1,7 @@
 // chatbot-widget.js
 (function () {
   // ---- CONFIG ----
-  const API_URL = "https://mascot.academictechnexus.com/api/message";
+  const API_URL = "https://mascot.academictechnexus.com/chat";
   const sessionId = "sess_" + Math.random().toString(36).slice(2, 10);
 
   // Resolve CSS path based on where this script is hosted
@@ -180,3 +180,4 @@
       sending = false;
     }
   }
+
