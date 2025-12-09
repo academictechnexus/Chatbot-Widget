@@ -21,7 +21,9 @@
   const sessionId = getOrCreateSessionId();
 
   // Resolve CSS path based on where this script is hosted
-  const scriptEl = document.currentScript || document.querySelector('script[src*="chatbot-widget"]');
+  const scriptEl =
+    document.currentScript ||
+    document.querySelector('script[src*="chatbot-widget"]');
   const cssHref = scriptEl
     ? new URL("chatbot-widget.css", scriptEl.src).href
     : "chatbot-widget.css";
@@ -126,11 +128,12 @@
     if (typing) typing.remove();
   }
 
-  // Figure out site identifier (supports data-site override for demos)
+  // Figure out site identifier (supports data-site override for demos / trials)
   const siteOverride = scriptEl && scriptEl.dataset ? scriptEl.dataset.site : null;
-  const siteId = siteOverride && siteOverride.trim()
-    ? siteOverride.trim()
-    : window.location.hostname;
+  const siteId =
+    siteOverride && siteOverride.trim()
+      ? siteOverride.trim()
+      : window.location.hostname;
 
   // ---- SEND MESSAGE (with RAG context + limit handling) ----
   async function sendMessage() {
