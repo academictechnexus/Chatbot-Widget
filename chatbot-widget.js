@@ -6,6 +6,8 @@
 (function(){
   "use strict";
 
+  console.log("mascot widget script loaded");
+
   // ---- config ----
   const API_BASE = window.__MASCOT_API_BASE || "https://mascot.academictechnexus.com";
   const CHAT_API = `${API_BASE}/chat`;
@@ -119,11 +121,11 @@
   }
 
   // ---- network helper with retries (unchanged logic) ----
-  async function postWithRetries(url, body, opts = {}){
+  async function postWithRetries(url, body, opts = {}) {
     const retries = opts.retries ?? 2;
     let attempt = 0;
     let lastErr = null;
-    while (attempt <= retries){
+    while (attempt <= retries) {
       try {
         const controller = new AbortController();
         const t = setTimeout(()=>controller.abort(), opts.timeoutMs || 20000);
@@ -341,7 +343,7 @@
       const pageUrl = window.location.href;
       const title = document.title || "";
       const metaDesc = Array.from(document.querySelectorAll("meta[name='description']")).map(m=>m.content).join(" ");
-      const snippet = (document.body && document.body.innerText) ? document.body.innerText.replace(/\s+/g," ").slice(0,1200) : "";
+      const snippet = (document.body && document.body.innerText) ? document.body.innerText.replace(/\s+/g, " ").slice(0,1200) : "";
       const payload = { sessionId, message:text, pageUrl, context:[`PAGE_TITLE: ${title}`, `META: ${metaDesc}`, `URL: ${pageUrl}`, `SNIPPET: ${snippet}`].join("\n\n"), site: SITE_OVERRIDE || undefined };
       try {
         const resp = await postWithRetries(CHAT_API, payload, { retries:2, timeoutMs:25000 });
@@ -543,6 +545,5 @@
     }
 
   } // end initWidget
-}); // end domReady wrapper
 
-})();
+})(); // end IIFE
