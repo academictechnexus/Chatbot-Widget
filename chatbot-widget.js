@@ -1,11 +1,12 @@
-/* widget.updated.js
-   Original logic preserved. Added avatar insertion, speaking API, gestures and audio amplitude mapping.
+/* widget.updated.js — final production script
+   Replace your existing widget.js with this file (keeps original endpoints & flows).
+   Adds avatar insertion, speaking APIs, amplitude mapping, gestures, and layout adjustments.
 */
 
 (function () {
   "use strict";
 
-  // ---- config ----
+  // ---- config (unchanged) ----
   const API_BASE = window.__MASCOT_API_BASE || "https://mascot.academictechnexus.com";
   const CHAT_API = `${API_BASE}/chat`;
   const ACTIVATE_API = `${API_BASE}/site/activate`;
@@ -56,7 +57,7 @@
   const SITE_OVERRIDE = (script && script.dataset && script.dataset.site) ? script.dataset.site : undefined;
   const EFFECTIVE_PLAN = ["basic","pro","advanced"].includes(String(PLAN).toLowerCase()) ? String(PLAN).toLowerCase() : "basic";
 
-  // ---- session & history ----
+  // ---- session & history storage ----
   function getSession() {
     try {
       let s = localStorage.getItem(KEY_SESSION);
@@ -76,13 +77,13 @@
   function saveHistory(arr) { try { localStorage.setItem(KEY_HISTORY, JSON.stringify(arr.slice(-200))); } catch (e) {} }
   let history = loadHistory();
 
-  // use a domReady helper so script works if included in head/body
+  // ---- domReady ----
   function domReady(cb){
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", cb);
     else cb();
   }
 
-  // ---- Avatar & speaking helpers (NEW) ----
+  // ---- Avatar & speaking helpers (final) ----
   let avatarInserted = false;
   let audioContext = null;
   let analyser = null;
@@ -91,7 +92,6 @@
 
   function insertAvatarInto(wrapper) {
     if (avatarInserted) return;
-    // create avatar area before messages
     const body = wrapper.querySelector(".cb-body");
     if (!body) return;
     const avatarWrap = document.createElement("div");
@@ -100,7 +100,7 @@
       <div class="avatar-card" id="avatarCard" aria-hidden="true">
         <div id="robotWrap">
           <!-- Inline SVG: white bot with mouth (id=botMouth) and eyes (id=eyeL, id=eyeR) -->
-          <svg id="whiteBotSVG" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 360" width="180" height="180" role="img">
+          <svg id="whiteBotSVG" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 360" width="180" height="180" role="img" aria-hidden="true">
             <defs>
               <linearGradient id="botBodyGrad" x1="0" x2="1">
                 <stop offset="0" stop-color="#ffffff"/>
@@ -136,7 +136,7 @@
                     <ellipse cx="32" cy="24" rx="28" ry="12" fill="url(#eyeGlow)" opacity="0.13"/>
                   </g>
                 </g>
-                <!-- mouth (NEW) -->
+                <!-- mouth -->
                 <g id="mouthGroup" transform="translate(26,96)">
                   <rect id="botMouth" x="0" y="0" rx="10" ry="10" width="120" height="12" fill="#d6f7ff" opacity="0.95" />
                   <rect id="botMouthInner" x="6" y="3" rx="6" ry="6" width="108" height="6" fill="#0b2a3a" opacity="0.18" />
@@ -154,12 +154,15 @@
         </div>
       </div>
     `;
-    // insert at top of body (above messages)
-    body.insertBefore(avatarWrap, body.firstChild);
+    // insert before messages (avatar decorative)
+    body.insertBefore(avatarWrap, body.querySelector(".cb-messages"));
     avatarInserted = true;
 
-    // start blink loop
+    // start blink loop and adjust the layout
     startBlinkLoop();
+    adjustChatLayout();
+    // listen for window resize to re-adjust
+    window.addEventListener("resize", function(){ setTimeout(adjustChatLayout, 90); });
   }
 
   function startBlinkLoop() {
@@ -182,10 +185,9 @@
     const avatar = document.getElementById('avatarCard');
     if (!avatar) return;
     avatar.classList.add('speaking');
-    // brighten eye color
+    // brighten eyes
     const eyes = document.querySelectorAll('#whiteBotSVG .eye circle:nth-child(3)');
     eyes.forEach(el => el.setAttribute('fill','#4fe0ff'));
-    // if analyser connected, amplitude loop runs automatically
   }
 
   function stopBotSpeaking() {
@@ -194,7 +196,6 @@
     avatar.classList.remove('speaking');
     const eyes = document.querySelectorAll('#whiteBotSVG .eye circle:nth-child(3)');
     eyes.forEach(el => el.setAttribute('fill','#34c9ff'));
-    // reset mouth scale
     const mouth = document.getElementById('botMouth');
     if (mouth) mouth.style.transform = '';
   }
@@ -203,18 +204,16 @@
     const avatar = document.getElementById('avatarCard');
     if (!avatar) return;
     avatar.classList.add(`gesture-${name}`);
-    // remove after short delay
     setTimeout(()=> avatar.classList.remove(`gesture-${name}`), 900);
   }
 
-  // audio connector: connect a playing audio element for amplitude mapping
+  // audio -> amplitude mapping (connect an HTMLAudioElement playing TTS)
   function connectBotAudio(audioEl) {
     if (!audioEl) return;
     try {
       if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
       }
-      // disconnect previous
       if (sourceNode) {
         try { sourceNode.disconnect(); } catch(e){}
         sourceNode = null;
@@ -226,7 +225,6 @@
       sourceNode.connect(gainNode);
       gainNode.connect(analyser);
       analyser.connect(audioContext.destination);
-      // start analyzer loop
       startAnalyzerLoop();
     } catch (e) {
       console.warn("connectBotAudio failed", e);
@@ -240,20 +238,17 @@
     analyzerInterval = setInterval(() => {
       try {
         analyser.getByteTimeDomainData(data);
-        // compute RMS
         let sum = 0;
         for (let i = 0; i < data.length; i++) {
           const v = (data[i] - 128) / 128;
           sum += v * v;
         }
-        const rms = Math.sqrt(sum / data.length); // 0..1
-        // map rms to mouth scale
+        const rms = Math.sqrt(sum / data.length);
         const mouth = document.getElementById('botMouth');
-        const minScale = 0.4;
+        const minScale = 0.45;
         const maxScale = 1.2;
-        const scale = Math.min(maxScale, Math.max(minScale, 1 + rms * 4)); // amplify a bit
+        const scale = Math.min(maxScale, Math.max(minScale, 1 + rms * 4));
         if (mouth) mouth.style.transform = `scaleY(${scale})`;
-        // add speaking class if above threshold
         const avatar = document.getElementById('avatarCard');
         if (avatar) {
           if (rms > 0.006) avatar.classList.add('speaking');
@@ -266,22 +261,36 @@
   function disconnectBotAudio() {
     if (analyzerInterval) { clearInterval(analyzerInterval); analyzerInterval = null; }
     if (sourceNode) { try { sourceNode.disconnect(); } catch(e){} sourceNode = null; }
-    if (analyser) { analyser.disconnect(); analyser = null; }
+    if (analyser) { try { analyser.disconnect(); } catch(e){} analyser = null; }
     if (audioContext) { try { audioContext.close(); } catch(e){} audioContext = null; }
   }
 
-  // expose the APIs globally
+  // layout adjustment to ensure avatar doesn't overlap messages
+  function adjustChatLayout() {
+    try {
+      const avatarWrap = document.querySelector('.cb-avatar-wrap');
+      const messagesEl = document.querySelector('#cb-messages');
+      if (!avatarWrap || !messagesEl) return;
+      const rect = avatarWrap.getBoundingClientRect();
+      const avatarHeight = Math.round(rect.height || 200);
+      const safePadding = Math.max(12, Math.round(avatarHeight * 0.45));
+      messagesEl.style.paddingTop = safePadding + "px";
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    } catch(e){}
+  }
+
+  // expose APIs
   window.startBotSpeaking = startBotSpeaking;
   window.stopBotSpeaking = stopBotSpeaking;
   window.botGesture = botGesture;
   window.connectBotAudio = connectBotAudio;
   window.disconnectBotAudio = disconnectBotAudio;
 
-  // ---- robust DOM ready call ----
+  // ---- script logic (widget UI & behavior) ----
   domReady(initWidget);
 
   function initWidget(){
-    // ---- DOM build ----
+    // build launcher + wrapper
     const launcher = document.createElement("button");
     launcher.type = "button";
     launcher.className = "cb-launcher";
@@ -300,7 +309,7 @@
           <button type="button" class="cb-close" aria-label="Close chat">×</button>
         </div>
         <div class="cb-body">
-          <!-- Avatar will be inserted here by JS -->
+          <!-- avatar will be inserted here -->
           <div class="cb-messages" id="cb-messages" aria-live="polite"></div>
         </div>
         <div class="cb-footer">
@@ -315,22 +324,22 @@
     `;
     document.body.appendChild(wrapper);
 
-    // grab elements
+    // elements
     const closeBtn = wrapper.querySelector(".cb-close");
     const messagesEl = wrapper.querySelector("#cb-messages");
     const inputEl = wrapper.querySelector("#cb-input");
     const sendBtn = wrapper.querySelector("#cb-send");
 
-    // insert avatar now
+    // insert avatar and adjust layout
     insertAvatarInto(wrapper);
 
-    // hidden file input for upload (Pro+)
+    // hidden file input
     const fileInput = document.createElement("input");
     fileInput.type = "file";
     fileInput.style.display = "none";
     document.body.appendChild(fileInput);
 
-    // ---- UI functions (unchanged but with slight hooks to speaking) ----
+    // UI helper functions (kept intact)
     function createBubble(role, html, ts) {
       const b = document.createElement("div");
       b.className = "cb-msg " + (role === "user" ? "cb-msg-user" : "cb-msg-bot");
@@ -348,8 +357,7 @@
     }
 
     function addBot(text, extra = {}) {
-      // When we add a bot reply, briefly animate speaking to improve interactivity.
-      // Start speaking now, stop shortly after UI render (or let TTS override via connectBotAudio).
+      // create speaking feel
       try { startBotSpeaking(); } catch(e){}
       let html;
       if (extra && extra.type === "card") {
@@ -367,7 +375,7 @@
       history.push({ id: `b-${Date.now()}`, role: "bot", text, ts: nowIso(), extra });
       saveHistory(history);
 
-      // add quick-button handlers
+      // attach quick button handlers
       const btns = el.querySelectorAll(".cb-quick-btn");
       if (btns.length) btns.forEach(btn => {
         btn.addEventListener("click", (ev) => {
@@ -377,7 +385,7 @@
         });
       });
 
-      // stop speaking after a short moment unless audio connected
+      // stop speaking shortly after render unless audio is driving mouth
       setTimeout(()=>{ try{ stopBotSpeaking(); }catch(e){} }, 900);
     }
 
@@ -394,7 +402,6 @@
       if (t) t.remove();
     }
 
-    // ---- history render ----
     function renderHistory() {
       messagesEl.innerHTML = "";
       for (const m of history) {
@@ -411,7 +418,7 @@
       messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
-    // ---- network helper with basic retries ----
+    // network helper with retries
     async function postWithRetries(url, body, opts = {}) {
       const retries = opts.retries ?? 2;
       let attempt = 0;
@@ -439,7 +446,7 @@
       throw lastErr;
     }
 
-    // ---- server history restore (optional) ----
+    // optionally fetch server side history
     async function fetchServerHistory(site, session) {
       try {
         const url = new URL(CONV_API || `${API_BASE}/conversations`);
@@ -455,7 +462,7 @@
       }
     }
 
-    // ---- activation flow (token provided when embedding) ----
+    // activation
     let activeSite = null;
     let demoRemaining = null;
     async function activateIfNeeded() {
@@ -479,7 +486,7 @@
       }
     }
 
-    // ---- send message ----
+    // sendMessage
     let sending = false;
     async function sendMessage() {
       if (sending) return;
@@ -528,7 +535,7 @@
         const reply = data.reply || data.text || data.message || "";
         const extra = data.extra || null;
 
-        // If you want automatic speaking for non-stream responses, we already call startBotSpeaking in addBot.
+        // add bot reply (calls startBotSpeaking briefly inside addBot)
         addBot(reply || "No reply", extra);
 
         if (typeof data.remaining === "number") {
@@ -549,7 +556,7 @@
       }
     }
 
-    // ---- upload support (Pro+) ----
+    // upload support
     async function uploadFile(file) {
       if (!file) return;
       addBot(`Uploading ${file.name}...`);
@@ -569,19 +576,19 @@
       }
     }
 
-    // drag/drop upload & keyboard shortcut
+    // drag/drop and file keyboard shortcut
     messagesEl.addEventListener("dragover", (e)=>{ e.preventDefault(); wrapper.classList.add("cb-dragover"); });
     messagesEl.addEventListener("dragleave", ()=>{ wrapper.classList.remove("cb-dragover"); });
     messagesEl.addEventListener("drop", (e)=>{ e.preventDefault(); wrapper.classList.remove("cb-dragover"); const f = (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) || null; if (f) uploadFile(f); });
     fileInput.addEventListener("change", (e)=>{ const f = e.target.files && e.target.files[0]; if (f) uploadFile(f); fileInput.value = ""; });
 
-    // ---- feature UI per plan ----
+    // feature area
     function renderFeatureArea() {
       if (EFFECTIVE_PLAN === "pro") addBot("Pro demo: file uploads and RAG enabled (demo).");
       if (EFFECTIVE_PLAN === "advanced") addBot("Advanced demo: summarization and handover features available.");
     }
 
-    // ---- lead modal (basic) ----
+    // lead modal
     function showLeadModal() {
       const modal = document.createElement("div");
       modal.style.position = "fixed"; modal.style.left = 0; modal.style.top = 0; modal.style.right = 0; modal.style.bottom = 0;
@@ -613,10 +620,9 @@
       });
     }
 
-    // ---- upgrade CTA ----
     function showUpgrade(url) { addBot(`Upgrade: ${url || (API_BASE + "/upgrade")}`); }
 
-    // ---- open / close and initialization ----
+    // open/close + restore history
     async function tryRestore() {
       const site = SITE_OVERRIDE || window.location.hostname;
       const srv = await fetchServerHistory(site, sessionId).catch(()=>null);
@@ -630,11 +636,13 @@
       if (!restored) renderHistory();
       if (!history || history.length === 0) addBot("Hello! I'm your AI assistant. How can I help you today?");
       inputEl.focus();
+      // ensure layout after open
+      setTimeout(adjustChatLayout, 120);
     }
 
     function closeChat() { wrapper.style.display = "none"; }
 
-    // launcher click toggles open/close
+    // toggle launcher
     launcher.addEventListener("click", async () => {
       if (wrapper.style.display === "flex") { closeChat(); return; }
       await activateIfNeeded();
@@ -644,15 +652,15 @@
 
     closeBtn.addEventListener("click", () => closeChat());
 
+    // send events
     sendBtn.addEventListener("click", sendMessage);
     inputEl.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
 
-    // file input keyboard shortcut (single attachment)
+    // keyboard upload
     wrapper.addEventListener("keydown", (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "u") { e.preventDefault(); fileInput.click(); } });
-
     fileInput.addEventListener("change", (e) => { const f = e.target.files && e.target.files[0]; if (f) uploadFile(f); fileInput.value = ""; });
 
-    // expose API for debug & integration
+    // widget API for integration
     window.__mascotWidget = Object.assign(window.__mascotWidget || {}, {
       sessionId,
       plan: EFFECTIVE_PLAN,
@@ -661,7 +669,7 @@
       close: closeChat,
       sendMessage,
       getState: () => ({ sessionId, plan: EFFECTIVE_PLAN, activeSite, demoRemaining, history }),
-      // new: avatar/audio helpers
+      // avatar/audio helpers
       startBotSpeaking,
       stopBotSpeaking,
       botGesture,
@@ -674,8 +682,7 @@
     renderHistory();
     if (TOKEN) activateIfNeeded();
 
-    // auto-open if ?openmascot present
     if (location.search.includes("openmascot")) setTimeout(()=> launcher.click(), 400);
-  } // end initWidget
+  } // initWidget end
 
-})(); // end IIFE
+})(); // IIFE end
