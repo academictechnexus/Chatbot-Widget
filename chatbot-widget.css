@@ -1,5 +1,5 @@
-/* chatbot-widget.css — polished UI to match screenshot and ensure launcher visible.
-   Drop-in replacement. Keeps all classes/IDs used by the JS.
+/* chatbot-widget.css — UI + Mascot styles (drop-in replacement)
+   Includes header mascot, bot-avatar, animations, and reduced-motion support.
 */
 
 /* Theme variables */
@@ -17,22 +17,18 @@
   --cb-width: 360px;
   --cb-height: 520px;
   --cb-launcher-size: 56px;
-  --cb-z: 2147483647; /* very high to ensure visibility */
+  --cb-z: 2147483647;
 }
 
-/* basic reset */
+/* Basic resets */
 *{box-sizing:border-box}
 body .cb-launcher,
 .cb-send-btn,
 .cb-close,
 .cb-quick-btn,
-.cb-upload-btn{
-  font-family:var(--cb-font);
-  -webkit-font-smoothing:antialiased;
-  -moz-osx-font-smoothing:grayscale;
-}
+.cb-upload-btn{ font-family:var(--cb-font) }
 
-/* -------- Launcher (floating bubble) -------- */
+/* ---------- Launcher ---------- */
 .cb-launcher{
   position: fixed;
   bottom: 20px;
@@ -50,204 +46,86 @@ body .cb-launcher,
   padding:0;
   cursor:pointer;
   transition: transform .14s ease, box-shadow .14s ease, opacity .14s ease;
-  outline: none;
 }
 .cb-launcher:active{ transform: scale(.98) }
 .cb-launcher:focus{ box-shadow: 0 0 0 6px rgba(79,70,229,0.12) }
-
-/* launcher icon */
 .cb-launcher-icon svg{ width:20px;height:20px; fill:#fff; display:block }
 
-/* -------- Wrapper & card -------- */
+/* ---------- Wrapper & Card ---------- */
 .cb-wrapper{
   position: fixed;
   bottom: 100px;
   right: 24px;
   width: var(--cb-width);
   height: var(--cb-height);
-  display: none; /* toggled by JS (style.display = 'flex'/'none') */
+  display: none;
   align-items: flex-end;
   justify-content:flex-end;
   z-index: calc(var(--cb-z) - 1);
   font-family:var(--cb-font);
-  -webkit-font-smoothing:antialiased;
 }
 
 /* card */
-.cb-card{
-  width:100%;
-  height:100%;
-  background: var(--cb-bg);
-  border-radius: var(--cb-radius);
-  box-shadow: var(--cb-shadow);
-  overflow:hidden;
-  display:flex;
-  flex-direction:column;
-  border:1px solid var(--cb-border);
-}
+.cb-card{ width:100%; height:100%; background:var(--cb-bg); border-radius:var(--cb-radius); box-shadow:var(--cb-shadow); overflow:hidden; display:flex; flex-direction:column; border:1px solid var(--cb-border) }
 
-/* header */
-.cb-header{
-  background: var(--cb-gradient);
-  color: #fff;
-  padding: 14px 16px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  font-weight:600;
-  font-size:15px;
-  border-top-left-radius: var(--cb-radius);
-  border-top-right-radius: var(--cb-radius);
-}
+.cb-header{ background:var(--cb-gradient); color:#fff; padding: 14px 16px; display:flex; align-items:center; justify-content:space-between; font-weight:600; font-size:15px; border-top-left-radius:var(--cb-radius); border-top-right-radius:var(--cb-radius) }
 
-/* small badge placeholder (if used) */
-.cb-title{ display:flex; align-items:center; gap:8px }
+/* Title with optional mascot */
+.cb-title{ display:flex; align-items:center; gap:10px }
 
-/* close button */
-.cb-close{
-  border:none;
-  background:transparent;
-  color:rgba(255,255,255,0.9);
-  font-size:18px;
-  cursor:pointer;
-  padding:6px;
-  border-radius:8px;
-}
-.cb-close:focus{ outline: none; box-shadow: 0 0 0 4px rgba(255,255,255,0.12) }
+/* Header mascot */
+.cb-mascot{ width:34px; height:34px; border-radius:8px; object-fit:cover; transform-origin:center; transition: transform 220ms ease, opacity 220ms ease; box-shadow: 0 6px 16px rgba(0,0,0,0.12) }
 
-/* body (messages area) */
-.cb-body{
-  flex:1;
-  background: var(--cb-body-bg);
-  padding: 14px 16px;
-  overflow:hidden;
-  position:relative;
-}
+/* small 'thinking' tilt for mascot */
+.cb-mascot.thinking{ transform: rotate(-8deg) translateY(-2px) }
 
-/* messages container with scrollbar */
-.cb-messages{
-  height:100%;
-  overflow-y:auto;
-  padding-bottom:8px;
-  scroll-behavior:smooth;
-}
+/* blink animation (applies to svg content inlined) */
+@keyframes mascot-blink { 0%, 95%, 100%{ transform: scaleY(1) } 97%{ transform: scaleY(0.05) } }
 
-/* custom scrollbar (webkit) */
+/* body (messages) */
+.cb-body{ flex:1; background:var(--cb-body-bg); padding:14px 16px; overflow:hidden; position:relative }
+.cb-messages{ height:100%; overflow-y:auto; padding-bottom:8px; scroll-behavior:smooth }
 .cb-messages::-webkit-scrollbar{ width:10px }
-.cb-messages::-webkit-scrollbar-thumb{ background:#ddd; border-radius:999px; border:2px solid transparent; background-clip:padding-box }
+.cb-messages::-webkit-scrollbar-thumb{ background:#ddd; border-radius:999px }
 
-/* message bubble base */
-.cb-msg{
-  max-width:78%;
-  padding:10px 14px;
-  margin-bottom:10px;
-  border-radius:14px;
-  font-size:14px;
-  line-height:1.45;
-  word-break:break-word;
-  box-shadow: 0 1px 0 rgba(0,0,0,0.02);
-}
+/* base bubble */
+.cb-msg{ max-width:78%; padding:10px 14px; margin-bottom:10px; border-radius:14px; font-size:14px; line-height:1.45; word-break:break-word; box-shadow: 0 1px 0 rgba(0,0,0,0.02) }
 
-/* bot bubble: soft light grey (screenshot) */
-.cb-msg-bot{
-  background:#e9edf2;
-  color:#111827;
-  margin-right:auto;
-  border-bottom-left-radius:6px;
-}
+/* bot bubble */
+.cb-msg-bot{ background:#e9edf2; color:#111827; margin-right:auto; border-bottom-left-radius:6px }
 
-/* user bubble: gradient purple pill */
-.cb-msg-user{
-  background: linear-gradient(135deg,#6e4ef6,#8b5cf6);
-  color:#fff;
-  margin-left:auto;
-  border-bottom-right-radius:6px;
-}
+/* user bubble */
+.cb-msg-user{ background: linear-gradient(135deg,#6e4ef6,#8b5cf6); color:#fff; margin-left:auto; border-bottom-right-radius:6px }
 
-/* typing indicator (inline) */
-.cb-typing{
-  display:inline-flex;
-  gap:6px;
-  align-items:center;
-}
-.cb-typing-dot{
-  width:8px;height:8px;border-radius:999px;background:#9ca3af;opacity:.9; animation:cb-bounce 1s infinite ease-in-out;
-}
-.cb-typing-dot:nth-child(2){ animation-delay:.12s }
-.cb-typing-dot:nth-child(3){ animation-delay:.24s }
+/* typing indicator */
+.cb-typing{ display:inline-flex; gap:6px; align-items:center }
+.cb-typing-dot{ width:8px; height:8px; border-radius:999px; background:#9ca3af; opacity:.9; animation:cb-bounce 1s infinite ease-in-out }
+.cb-typing-dot:nth-child(2){ animation-delay:.12s } .cb-typing-dot:nth-child(3){ animation-delay:.24s }
+@keyframes cb-bounce{ 0%,80%,100%{ transform:translateY(0); opacity:.6 } 40%{ transform:translateY(-4px); opacity:1 } }
 
-@keyframes cb-bounce{
-  0%,80%,100%{ transform:translateY(0); opacity:.6 }
-  40%{ transform:translateY(-4px); opacity:1 }
-}
+/* footer & input */
+.cb-footer{ padding:14px; border-top:1px solid var(--cb-border); background:#fff }
+.cb-input-shell{ display:flex; align-items:center; gap:8px; background:#fff; border-radius:36px; padding:8px 12px; border:1px solid rgba(139,139,139,0.12); box-shadow: 0 2px 6px rgba(15,23,42,0.04) }
+#cb-input{ flex:1; border:none; outline:none; font-size:14px; padding:8px 6px; background:transparent }
+.cb-send-btn{ width:44px; height:44px; border-radius:50%; border:none; background:var(--cb-gradient); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow: 0 6px 18px rgba(79,70,229,0.18) }
+.cb-send-btn svg{ width:18px; height:18px; fill:#fff }
 
-/* footer / input area */
-.cb-footer{
-  padding:14px;
-  border-top:1px solid var(--cb-border);
-  background:#fff;
-}
+/* ----- Bot avatar row (wraps bubble) ----- */
+.cb-bot-row{ display:flex; align-items:flex-start; gap:8px; margin-bottom:10px }
+.cb-bot-avatar{ width:34px; height:34px; border-radius:8px; flex:0 0 34px; object-fit:cover; margin-top:4px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: transform 180ms ease }
+.cb-bot-msg-wrapper{ flex:1 }
 
-/* input shell: rounded white capsule */
-.cb-input-shell{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  background:#fff;
-  border-radius:36px;
-  padding:8px 12px;
-  border:1px solid rgba(139,139,139,0.12);
-  box-shadow: 0 2px 6px rgba(15,23,42,0.04);
-}
+/* small quick buttons */
+.cb-quick-btn{ padding:8px 12px; border-radius:999px; border:none; background:linear-gradient(135deg,#6e58f7,#7b5cf6); color:#fff; cursor:pointer; margin:6px 6px 0 0 }
 
-/* input field */
-#cb-input{
-  flex:1;
-  border:none;
-  outline:none;
-  font-size:14px;
-  padding:8px 6px;
-  background:transparent;
-}
-
-/* send button round */
-.cb-send-btn{
-  width:44px;
-  height:44px;
-  border-radius:50%;
-  border:none;
-  background:var(--cb-gradient);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  box-shadow: 0 6px 18px rgba(79,70,229,0.18);
-}
-.cb-send-btn svg{ width:18px;height:18px; fill:#fff }
-
-/* quick buttons (if any) */
-.cb-quick-btn{
-  padding:8px 12px;
-  border-radius:999px;
-  border:none;
-  background:linear-gradient(135deg,#6e58f7,#7b5cf6);
-  color:#fff;
-  cursor:pointer;
-  margin:6px 6px 0 0;
-}
-
-/* dragover visual */
-.cb-dragover{ outline:3px dashed rgba(79,70,229,0.12); }
+/* dragover */
+.cb-dragover{ outline:3px dashed rgba(79,70,229,0.12) }
 
 /* responsive */
-@media (max-width:520px){
-  .cb-wrapper{ width:92vw; height:68vh; left:10px; right:10px; bottom:20px }
-  .cb-card{ height:100% }
-  .cb-messages::-webkit-scrollbar{ width:8px }
-}
+@media (max-width:520px){ .cb-wrapper{ width:92vw; height:68vh; left:10px; right:10px; bottom:20px } .cb-card{ height:100% } .cb-messages::-webkit-scrollbar{ width:8px } }
 
-/* reduced-motion support */
+/* reduced-motion */
 @media (prefers-reduced-motion: reduce){
-  .cb-typing-dot{ animation:none }
+  .cb-mascot, .cb-bot-avatar, .cb-typing-dot{ animation:none; transition:none }
   .cb-messages{ scroll-behavior:auto }
 }
