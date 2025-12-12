@@ -1,16 +1,16 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Chatbot Widget Preview</title>
 
-  <!-- Page styles -->
+  <!-- Page quick styles -->
   <style>
     body {
       font-family: Arial, sans-serif;
       background: #f2f2f2;
-      padding: 40px;
+      padding: 36px;
       text-align: center;
       min-height: 100vh;
       margin: 0;
@@ -35,38 +35,58 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       text-align: left;
     }
-    footer { margin-top: 28px; color: #888; font-size: 13px; }
+    pre { background:#fafafa; padding:12px; border-radius:8px; border:1px solid #eee; overflow:auto; }
+    footer { margin-top: 28px; color: #888; font-size: 13px; text-align:center }
+    .muted { color:#666; font-size:13px }
   </style>
 
   <!-- Chatbot widget CSS (local file) -->
-  <link rel="stylesheet" href="./chatbot-widget.css">
+  <link rel="stylesheet" href="./chatbot-widget.css" />
 </head>
 <body>
 
-  <h1>Chatbot Widget Hosted — Preview</h1>
+  <h1>Chatbot Widget — Preview</h1>
   <p>Scroll to the bottom-right — you should see the floating chat launcher. Click it to open the widget.</p>
 
   <div class="box">
-    <h2 style="margin-top:0">Embed instructions</h2>
-    <p>To embed this widget on any page, include the stylesheet in the <code>&lt;head&gt;</code> and the script before <code>&lt;/body&gt;</code> (or at the end of your body):</p>
-    <pre style="background:#fafafa;padding:12px;border-radius:8px;border:1px solid #eee">
-&lt;link rel="stylesheet" href="./chatbot-widget.css"&gt;
+    <h2 style="margin-top:0">Embed & test instructions</h2>
+
+    <p>To embed this widget on any page:</p>
+    <ol>
+      <li>Place <code>chatbot-widget.css</code> in your site and include in the page <code>&lt;head&gt;</code> (already in this example).</li>
+      <li>Place <code>lottie-loader.js</code> (optional helper) and <code>chatbot-widget.js</code> next to the page and include them before <code>&lt;/body&gt;</code>.</li>
+      <li>Optionally add <code>lottie.min.js</code> and your Lottie JSONs (recommended to self-host to avoid CSP issues).</li>
+    </ol>
+
+    <p class="muted"><strong>Note:</strong> if you self-host Lottie, save <code>lottie.min.js</code> next to the widget files. The loader will prefer local copy then fall back to CDN.</p>
+
+    <h3>Minimal embed snippet</h3>
+    <pre>&lt;link rel="stylesheet" href="./chatbot-widget.css"&gt;
 ...
-&lt;script src="./chatbot-widget.js" data-plan="basic" data-token="YOUR_TOKEN_IF_ANY" data-site="example.com"&gt;&lt;/script&gt;
+&lt;!-- optional helper to ensure Lottie is available (local or CDN) --&gt;
+&lt;script src="./lottie-loader.js"&gt;&lt;/script&gt;
+
+&lt;!-- main widget script --&gt;
+&lt;script src="./chatbot-widget.js" data-plan="basic" data-token="YOUR_TOKEN_IF_ANY" data-site="example.com" data-auto-open="false"&gt;&lt;/script&gt;
     </pre>
 
-    <p><strong>Note:</strong> If you serve assets from a subfolder (for example <code>/assets/</code>), update the paths accordingly.</p>
+    <p><strong>Quick test commands</strong></p>
+    <ul>
+      <li>Open widget programmatically: <code>__mascotWidget.open()</code></li>
+      <li>Force a different mascot (testing): <code>sessionStorage.setItem('mascot_lottie_idx_v1','1'); location.reload();</code></li>
+    </ul>
 
-    <p style="margin-top:8px">You can also open the widget programmatically from the console:</p>
-    <code>__mascotWidget.open()</code>
+    <p style="margin-top:8px"><strong>Local test:</strong> run <code>python3 -m http.server 8000</code> and open <code>http://localhost:8000</code>.</p>
   </div>
 
   <footer>
     Test tips: hard-refresh after upload (Ctrl+Shift+R), or open in an incognito window to avoid stale cache.
   </footer>
 
-  <!-- Chatbot widget script (local file) -->
-  <!-- Keep the data attributes if you want activation/plan behavior -->
-  <script src="./chatbot-widget.js" data-plan="basic"></script>
+  <!-- Optional loader: tries to load local lottie.min.js then fallback to CDN -->
+  <script src="./lottie-loader.js"></script>
+
+  <!-- Chatbot widget script (local file) - keep data attributes for plan/token/site/auto-open -->
+  <script src="./chatbot-widget.js" data-plan="basic" data-auto-open="false"></script>
 </body>
 </html>
