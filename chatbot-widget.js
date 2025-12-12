@@ -1,11 +1,11 @@
-/* chatbot-widget.js — Updated: ensures DOM ready before creating elements.
-   Minimal safe changes; behavior/APIs unchanged. Keep this with chatbot-widget.css
+/* chatbot-widget.js — widget + mascot enhancements (frontend only)
+   Drop-in replacement. Preserves endpoints, behavior, and class names.
 */
 
 (function () {
   "use strict";
 
-  // ---- config ----
+  // ---- config (same as before) ----
   const API_BASE = window.__MASCOT_API_BASE || "https://mascot.academictechnexus.com";
   const CHAT_API = `${API_BASE}/chat`;
   const ACTIVATE_API = `${API_BASE}/site/activate`;
@@ -76,16 +76,58 @@
   function saveHistory(arr) { try { localStorage.setItem(KEY_HISTORY, JSON.stringify(arr.slice(-200))); } catch (e) {} }
   let history = loadHistory();
 
-  // use a domReady helper so script works if included in head/body
-  function domReady(cb){
-    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", cb);
-    else cb();
+  // ---- MASCOT ASSETS (3 tiny inline SVGs as data URIs) ----
+  // You can replace these with external files later (e.g., "./mascot1.svg")
+  const MASCOT_INLINE_SVGS = [
+    // Mascot 1: friendly robot-ish face (simple)
+    'data:image/svg+xml;utf8,' + encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+         <rect rx="12" width="64" height="64" fill="#6c63ff"/>
+         <circle cx="22" cy="28" r="5" fill="#fff"/>
+         <circle cx="42" cy="28" r="5" fill="#fff"/>
+         <rect x="18" y="38" width="28" height="6" rx="3" fill="#fff" opacity="0.9"/>
+       </svg>`
+    ),
+    // Mascot 2: cute blob
+    'data:image/svg+xml;utf8,' + encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+         <defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#4f46e5"/><stop offset="1" stop-color="#9333ea"/></linearGradient></defs>
+         <path d="M10 34c0-14 8-24 22-24s22 10 22 24-8 26-22 26S10 48 10 34z" fill="url(#g)"/>
+         <circle cx="26" cy="28" r="3" fill="#fff"/><circle cx="38" cy="28" r="3" fill="#fff"/>
+       </svg>`
+    ),
+    // Mascot 3: smiling badge
+    'data:image/svg+xml;utf8,' + encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+         <circle cx="32" cy="32" r="30" fill="#06b6d4"/>
+         <circle cx="24" cy="28" r="3" fill="#fff"/><circle cx="40" cy="28" r="3" fill="#fff"/>
+         <path d="M22 40c3 4 17 4 20 0" stroke="#fff" stroke-width="3" stroke-linecap="round" fill="none"/>
+       </svg>`
+    )
+  ];
+
+  // pick a mascot for this session (store in sessionStorage)
+  const MASCOT_KEY = "mascot_choice_v1";
+  function chooseMascot() {
+    try {
+      let id = sessionStorage.getItem(MASCOT_KEY);
+      if (id && Number(id) >= 0 && Number(id) < MASCOT_INLINE_SVGS.length) return Number(id);
+      const pick = Math.floor(Math.random() * MASCOT_INLINE_SVGS.length);
+      sessionStorage.setItem(MASCOT_KEY, String(pick));
+      return pick;
+    } catch (e) { return 0; }
   }
+  const MASCOT_INDEX = chooseMascot();
+  const MASCOT_SRC = MASCOT_INLINE_SVGS[MASCOT_INDEX];
+
+  // ---- domReady helper to ensure body exists ----
+  function domReady(cb){ if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", cb); else cb(); }
 
   domReady(initWidget);
 
   function initWidget(){
-    // ---- DOM build ----
+
+    // ---- DOM build (same structure as before) ----
     const launcher = document.createElement("button");
     launcher.type = "button";
     launcher.className = "cb-launcher";
@@ -129,7 +171,7 @@
     fileInput.style.display = "none";
     document.body.appendChild(fileInput);
 
-    // ---- UI functions ----
+    // ---- UI functions (createBubble/addUser/addBot unchanged except for avatar wrapper) ----
     function createBubble(role, html, ts) {
       const b = document.createElement("div");
       b.className = "cb-msg " + (role === "user" ? "cb-msg-user" : "cb-msg-bot");
@@ -146,6 +188,34 @@
       saveHistory(history);
     }
 
+    // new helper: attach avatar to a bot-message element (wraps it)
+    function attachBotAvatarToElement(el) {
+      try {
+        if (!el || !el.classList || !el.classList.contains("cb-msg-bot")) return;
+        // if already inside a cb-bot-row, skip
+        if (el.parentElement && el.parentElement.classList && el.parentElement.classList.contains("cb-bot-row")) return;
+        // create wrapper
+        const row = document.createElement("div");
+        row.className = "cb-bot-row";
+        const img = document.createElement("img");
+        img.className = "cb-bot-avatar";
+        img.alt = "";
+        img.src = MASCOT_SRC;
+        // bubble wrapper
+        const bwrap = document.createElement("div");
+        bwrap.className = "cb-bot-msg-wrapper";
+        bwrap.appendChild(el.cloneNode(true));
+        // replace el with row
+        el.replaceWith(row);
+        row.appendChild(img);
+        row.appendChild(bwrap);
+        // mark to avoid re-applying (on the internal bubble)
+        const inner = row.querySelector(".cb-msg-bot");
+        if (inner) inner.dataset.avatarApplied = "1";
+      } catch (e) { console.warn("attachBotAvatarToElement:", e); }
+    }
+
+    // addBot: uses attach helper after appending
     function addBot(text, extra = {}) {
       let html;
       if (extra && extra.type === "card") {
@@ -159,12 +229,16 @@
       }
       const el = createBubble("bot", html, nowIso());
       messagesEl.appendChild(el);
+
+      // attach avatar to this new bot message
+      attachBotAvatarToElement(el);
+
       messagesEl.scrollTop = messagesEl.scrollHeight;
       history.push({ id: `b-${Date.now()}`, role: "bot", text, ts: nowIso(), extra });
       saveHistory(history);
 
       // add quick-button handlers
-      const btns = el.querySelectorAll(".cb-quick-btn");
+      const btns = messagesEl.querySelectorAll(".cb-quick-btn");
       if (btns.length) btns.forEach(btn => {
         btn.addEventListener("click", (ev) => {
           const idx = parseInt(btn.dataset.idx, 10);
@@ -174,7 +248,18 @@
       });
     }
 
+    // thinking state: toggle mascot 'thinking' class when typing shown/removed
+    function setMascotThinking(on){
+      try {
+        const m = wrapper.querySelector(".cb-mascot");
+        if (!m) return;
+        if (on) m.classList.add("thinking");
+        else m.classList.remove("thinking");
+      } catch(e) { /* ignore */ }
+    }
+
     function showTyping() {
+      setMascotThinking(true);
       const t = document.createElement("div");
       t.className = "cb-msg cb-msg-bot cb-typing";
       t.innerHTML = `<span class="cb-typing-dot"></span><span class="cb-typing-dot"></span><span class="cb-typing-dot"></span>`;
@@ -183,28 +268,38 @@
     }
 
     function removeTyping() {
+      setMascotThinking(false);
       const t = messagesEl.querySelector(".cb-typing");
       if (t) t.remove();
     }
 
-    // ---- history render ----
+    // ---- history render (attach avatars for each bot message) ----
     function renderHistory() {
       messagesEl.innerHTML = "";
       for (const m of history) {
         if (m.role === "user") messagesEl.appendChild(createBubble("user", `<div class="cb-text">${esc(m.text)}</div>`, m.ts));
         else {
           const extra = m.extra || {};
-          if (extra.type === "card") messagesEl.appendChild(createBubble("bot", `<div style="font-weight:600">${esc(extra.title||"")}</div><div>${renderMarkdown(extra.body||"")}</div>`, m.ts));
-          else if (extra.type === "buttons") {
+          if (extra.type === "card") {
+            const temp = createBubble("bot", `<div style="font-weight:600">${esc(extra.title||"")}</div><div>${renderMarkdown(extra.body||"")}</div>`, m.ts);
+            messagesEl.appendChild(temp);
+            attachBotAvatarToElement(temp);
+          } else if (extra.type === "buttons") {
             const html = `<div>${renderMarkdown(m.text)}<div style="margin-top:8px">${(extra.buttons||[]).map((b,i)=>`<button class="cb-quick-btn" data-idx="${i}">${esc(b.label||b.text||"Option")}</button>`).join(" ")}</div></div>`;
-            messagesEl.appendChild(createBubble("bot", html, m.ts));
-          } else messagesEl.appendChild(createBubble("bot", `<div class="cb-text">${renderMarkdown(m.text)}</div>`, m.ts));
+            const temp = createBubble("bot", html, m.ts);
+            messagesEl.appendChild(temp);
+            attachBotAvatarToElement(temp);
+          } else {
+            const temp = createBubble("bot", `<div class="cb-text">${renderMarkdown(m.text)}</div>`, m.ts);
+            messagesEl.appendChild(temp);
+            attachBotAvatarToElement(temp);
+          }
         }
       }
       messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
-    // ---- network helper with basic retries ----
+    // ---- network helper with retries (unchanged) ----
     async function postWithRetries(url, body, opts = {}) {
       const retries = opts.retries ?? 2;
       let attempt = 0;
@@ -232,7 +327,7 @@
       throw lastErr;
     }
 
-    // ---- server history restore (optional) ----
+    // ---- server history restore (unchanged) ----
     async function fetchServerHistory(site, session) {
       try {
         const url = new URL(CONV_API || `${API_BASE}/conversations`);
@@ -243,14 +338,11 @@
         const data = await resp.json().catch(()=>null);
         if (!data || !Array.isArray(data.messages)) return null;
         return data.messages.map(m => ({ id: `srv-${m.ts}-${Math.random().toString(36).slice(2,6)}`, role: m.role, text: m.text, ts: m.ts || nowIso(), extra: m.extra || null }));
-      } catch (e) {
-        return null;
-      }
+      } catch (e) { return null; }
     }
 
-    // ---- activation flow (token provided when embedding) ----
-    let activeSite = null;
-    let demoRemaining = null;
+    // ---- activation (unchanged) ----
+    let activeSite = null; let demoRemaining = null;
     async function activateIfNeeded() {
       if (!TOKEN) return;
       try {
@@ -267,12 +359,10 @@
           const titleEl = wrapper.querySelector(".cb-title");
           if (titleEl) titleEl.textContent = `AI Assistant • ${j.message}`;
         }
-      } catch (e) {
-        console.warn("activate failed", e);
-      }
+      } catch (e) { console.warn("activate failed", e); }
     }
 
-    // ---- send message ----
+    // ---- sendMessage (unchanged behavior, now uses showTyping/removeTyping to toggle mascot) ----
     let sending = false;
     async function sendMessage() {
       if (sending) return;
@@ -340,7 +430,7 @@
       }
     }
 
-    // ---- upload support (Pro+) ----
+    // ---- upload support (unchanged) ----
     async function uploadFile(file) {
       if (!file) return;
       addBot(`Uploading ${file.name}...`);
@@ -354,25 +444,22 @@
         } else {
           addBot(data.error || "Upload failed.");
         }
-      } catch (e) {
-        console.error("upload error", e);
-        addBot("Upload failed (network).");
-      }
+      } catch (e) { console.error("upload error", e); addBot("Upload failed (network)."); }
     }
 
-    // drag/drop upload & keyboard shortcut
+    // ---- drag/drop upload & file input handlers (unchanged) ----
     messagesEl.addEventListener("dragover", (e)=>{ e.preventDefault(); wrapper.classList.add("cb-dragover"); });
     messagesEl.addEventListener("dragleave", ()=>{ wrapper.classList.remove("cb-dragover"); });
     messagesEl.addEventListener("drop", (e)=>{ e.preventDefault(); wrapper.classList.remove("cb-dragover"); const f = (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) || null; if (f) uploadFile(f); });
     fileInput.addEventListener("change", (e)=>{ const f = e.target.files && e.target.files[0]; if (f) uploadFile(f); fileInput.value = ""; });
 
-    // ---- feature UI per plan ----
+    // ---- feature UI per plan (unchanged) ----
     function renderFeatureArea() {
       if (EFFECTIVE_PLAN === "pro") addBot("Pro demo: file uploads and RAG enabled (demo).");
       if (EFFECTIVE_PLAN === "advanced") addBot("Advanced demo: summarization and handover features available.");
     }
 
-    // ---- lead modal (basic) ----
+    // ---- lead modal (unchanged) ----
     function showLeadModal() {
       const modal = document.createElement("div");
       modal.style.position = "fixed"; modal.style.left = 0; modal.style.top = 0; modal.style.right = 0; modal.style.bottom = 0;
@@ -398,13 +485,11 @@
           await postWithRetries(LEAD_API, { site: SITE_OVERRIDE || window.location.hostname, name, email, message, pageUrl: window.location.href }, { retries: 1, timeoutMs: 15000 });
           addBot("Thanks — we've saved your message. We'll contact you if needed.");
           modal.remove();
-        } catch (e) {
-          addBot("Could not send lead. Try again later.");
-        } finally { modal.querySelector("#lead-send").disabled = false; }
+        } catch (e) { addBot("Could not send lead. Try again later."); } finally { modal.querySelector("#lead-send").disabled = false; }
       });
     }
 
-    // ---- upgrade CTA ----
+    // ---- upgrade CTA (unchanged) ----
     function showUpgrade(url) { addBot(`Upgrade: ${url || (API_BASE + "/upgrade")}`); }
 
     // ---- open / close and initialization ----
@@ -425,7 +510,7 @@
 
     function closeChat() { wrapper.style.display = "none"; }
 
-    // launcher click toggles open/close
+    // Launcher click toggles open/close
     launcher.addEventListener("click", async () => {
       if (wrapper.style.display === "flex") { closeChat(); return; }
       await activateIfNeeded();
@@ -438,12 +523,30 @@
     sendBtn.addEventListener("click", sendMessage);
     inputEl.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
 
-    // file input keyboard shortcut (single attachment)
+    // file input keyboard shortcut
     wrapper.addEventListener("keydown", (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "u") { e.preventDefault(); fileInput.click(); } });
 
-    fileInput.addEventListener("change", (e) => { const f = e.target.files && e.target.files[0]; if (f) uploadFile(f); fileInput.value = ""; });
+    // file change handler already attached above
 
-    // expose API for debug
+    // ---- insert header mascot safely (non-destructive) ----
+    (function insertHeaderMascot(){
+      try {
+        const titleEl = wrapper.querySelector(".cb-title");
+        if (!titleEl) return;
+        if (titleEl.querySelector(".cb-mascot")) return; // no dupes
+        const img = document.createElement("img");
+        img.className = "cb-mascot";
+        img.alt = "Mascot";
+        img.src = MASCOT_SRC;
+        // put it as the first child
+        titleEl.prepend(img);
+        // small hover effect on launcher to nudge mascot (optional)
+        launcher.addEventListener("mouseenter", ()=> img.style.transform = "translateY(-3px) scale(1.02)");
+        launcher.addEventListener("mouseleave", ()=> img.style.transform = "");
+      } catch (e) { console.warn("insertHeaderMascot:", e); }
+    })();
+
+    // ---- expose API for debug ----
     window.__mascotWidget = Object.assign(window.__mascotWidget || {}, {
       sessionId,
       plan: EFFECTIVE_PLAN,
@@ -451,7 +554,9 @@
       open: () => { activateIfNeeded().then(()=>openChat()); },
       close: closeChat,
       sendMessage,
-      getState: () => ({ sessionId, plan: EFFECTIVE_PLAN, activeSite, demoRemaining, history })
+      getState: () => ({ sessionId, plan: EFFECTIVE_PLAN, activeSite, demoRemaining, history }),
+      // helper to change mascot (for testing)
+      _setMascotIndex: (i) => { if (typeof i === "number" && i >=0 && i < MASCOT_INLINE_SVGS.length){ try{ sessionStorage.setItem(MASCOT_KEY, String(i)); location.reload(); }catch(e){} } }
     });
 
     // initial render
