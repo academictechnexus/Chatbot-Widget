@@ -1,5 +1,5 @@
-/* chatbot-widget.js — Updated: ensures DOM ready before creating elements.
-   Minimal safe changes; behavior/APIs unchanged. Keep this with chatbot-widget.css
+/* widget.updated.js
+   Original logic preserved. Added avatar insertion, speaking API, gestures and audio amplitude mapping.
 */
 
 (function () {
@@ -82,6 +82,202 @@
     else cb();
   }
 
+  // ---- Avatar & speaking helpers (NEW) ----
+  let avatarInserted = false;
+  let audioContext = null;
+  let analyser = null;
+  let sourceNode = null;
+  let analyzerInterval = null;
+
+  function insertAvatarInto(wrapper) {
+    if (avatarInserted) return;
+    // create avatar area before messages
+    const body = wrapper.querySelector(".cb-body");
+    if (!body) return;
+    const avatarWrap = document.createElement("div");
+    avatarWrap.className = "cb-avatar-wrap";
+    avatarWrap.innerHTML = `
+      <div class="avatar-card" id="avatarCard" aria-hidden="true">
+        <div id="robotWrap">
+          <!-- Inline SVG: white bot with mouth (id=botMouth) and eyes (id=eyeL, id=eyeR) -->
+          <svg id="whiteBotSVG" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 360" width="180" height="180" role="img">
+            <defs>
+              <linearGradient id="botBodyGrad" x1="0" x2="1">
+                <stop offset="0" stop-color="#ffffff"/>
+                <stop offset="1" stop-color="#f2f6fb"/>
+              </linearGradient>
+              <radialGradient id="eyeGlow" cx="50%" cy="35%" r="60%">
+                <stop offset="0" stop-color="#9fe5ff" stop-opacity="1"/>
+                <stop offset="45%" stop-color="#5acbff" stop-opacity="0.45"/>
+                <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+              </radialGradient>
+              <filter id="shadowSoft" x="-50%" y="-50%" width="200%" height="200%">
+                <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000" flood-opacity="0.45"/>
+              </filter>
+            </defs>
+            <g transform="translate(60,30)">
+              <rect x="0" y="0" rx="36" ry="36" width="240" height="240" fill="url(#botBodyGrad)" filter="url(#shadowSoft)"/>
+              <ellipse cx="120" cy="86" rx="90" ry="36" fill="url(#eyeGlow)" opacity="0.06"/>
+              <g id="headGroup" transform="translate(56,28)">
+                <ellipse cx="74" cy="60" rx="74" ry="58" fill="#ffffff" stroke="#e8eef6" stroke-width="1"/>
+                <g id="visor" transform="translate(18,26)">
+                  <rect x="0" y="0" rx="28" ry="28" width="112" height="64" fill="#08121b"/>
+                  <g id="eyes" transform="translate(14,8)">
+                    <g id="eyeL" class="eye">
+                      <circle cx="20" cy="24" r="12" fill="#bff6ff" opacity="0.98"/>
+                      <circle cx="20" cy="24" r="6.2" fill="#001316" opacity="0.18"/>
+                      <circle cx="20" cy="24" r="5.6" fill="#34c9ff" />
+                    </g>
+                    <g id="eyeR" class="eye" transform="translate(56,0)">
+                      <circle cx="20" cy="24" r="12" fill="#bff6ff" opacity="0.98"/>
+                      <circle cx="20" cy="24" r="6.2" fill="#001316" opacity="0.18"/>
+                      <circle cx="20" cy="24" r="5.6" fill="#34c9ff" />
+                    </g>
+                    <ellipse cx="32" cy="24" rx="28" ry="12" fill="url(#eyeGlow)" opacity="0.13"/>
+                  </g>
+                </g>
+                <!-- mouth (NEW) -->
+                <g id="mouthGroup" transform="translate(26,96)">
+                  <rect id="botMouth" x="0" y="0" rx="10" ry="10" width="120" height="12" fill="#d6f7ff" opacity="0.95" />
+                  <rect id="botMouthInner" x="6" y="3" rx="6" ry="6" width="108" height="6" fill="#0b2a3a" opacity="0.18" />
+                </g>
+              </g>
+              <g transform="translate(68,160)">
+                <ellipse cx="56" cy="36" rx="72" ry="46" fill="#f9fbfd" stroke="#e6eef6" stroke-width="1" />
+                <g transform="translate(112,8) rotate(8)">
+                  <rect x="0" y="0" rx="4" ry="4" width="22" height="32" fill="#e8f6ff" stroke="#d6eaf9" stroke-width="1"/>
+                  <rect x="3" y="4" width="16" height="24" rx="2" ry="2" fill="#dff5ff"/>
+                </g>
+              </g>
+            </g>
+          </svg>
+        </div>
+      </div>
+    `;
+    // insert at top of body (above messages)
+    body.insertBefore(avatarWrap, body.firstChild);
+    avatarInserted = true;
+
+    // start blink loop
+    startBlinkLoop();
+  }
+
+  function startBlinkLoop() {
+    try {
+      const leftEye = document.querySelector('#whiteBotSVG #eyeL');
+      const rightEye = document.querySelector('#whiteBotSVG #eyeR');
+      if (!leftEye || !rightEye) return;
+      function doBlink(){
+        leftEye.classList.add('blink');
+        rightEye.classList.add('blink');
+        setTimeout(()=>{ leftEye.classList.remove('blink'); rightEye.classList.remove('blink'); }, 140);
+      }
+      setTimeout(()=>{ doBlink(); }, 800 + Math.random()*700);
+      setInterval(()=>{ doBlink(); }, 3200 + Math.round(Math.random()*1800));
+    } catch (e) { /* no-op */ }
+  }
+
+  // speaking & gestures API
+  function startBotSpeaking() {
+    const avatar = document.getElementById('avatarCard');
+    if (!avatar) return;
+    avatar.classList.add('speaking');
+    // brighten eye color
+    const eyes = document.querySelectorAll('#whiteBotSVG .eye circle:nth-child(3)');
+    eyes.forEach(el => el.setAttribute('fill','#4fe0ff'));
+    // if analyser connected, amplitude loop runs automatically
+  }
+
+  function stopBotSpeaking() {
+    const avatar = document.getElementById('avatarCard');
+    if (!avatar) return;
+    avatar.classList.remove('speaking');
+    const eyes = document.querySelectorAll('#whiteBotSVG .eye circle:nth-child(3)');
+    eyes.forEach(el => el.setAttribute('fill','#34c9ff'));
+    // reset mouth scale
+    const mouth = document.getElementById('botMouth');
+    if (mouth) mouth.style.transform = '';
+  }
+
+  async function botGesture(name) {
+    const avatar = document.getElementById('avatarCard');
+    if (!avatar) return;
+    avatar.classList.add(`gesture-${name}`);
+    // remove after short delay
+    setTimeout(()=> avatar.classList.remove(`gesture-${name}`), 900);
+  }
+
+  // audio connector: connect a playing audio element for amplitude mapping
+  function connectBotAudio(audioEl) {
+    if (!audioEl) return;
+    try {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      // disconnect previous
+      if (sourceNode) {
+        try { sourceNode.disconnect(); } catch(e){}
+        sourceNode = null;
+      }
+      sourceNode = audioContext.createMediaElementSource(audioEl);
+      analyser = audioContext.createAnalyser();
+      analyser.fftSize = 1024;
+      const gainNode = audioContext.createGain();
+      sourceNode.connect(gainNode);
+      gainNode.connect(analyser);
+      analyser.connect(audioContext.destination);
+      // start analyzer loop
+      startAnalyzerLoop();
+    } catch (e) {
+      console.warn("connectBotAudio failed", e);
+    }
+  }
+
+  function startAnalyzerLoop() {
+    if (!analyser) return;
+    const data = new Uint8Array(analyser.fftSize);
+    if (analyzerInterval) clearInterval(analyzerInterval);
+    analyzerInterval = setInterval(() => {
+      try {
+        analyser.getByteTimeDomainData(data);
+        // compute RMS
+        let sum = 0;
+        for (let i = 0; i < data.length; i++) {
+          const v = (data[i] - 128) / 128;
+          sum += v * v;
+        }
+        const rms = Math.sqrt(sum / data.length); // 0..1
+        // map rms to mouth scale
+        const mouth = document.getElementById('botMouth');
+        const minScale = 0.4;
+        const maxScale = 1.2;
+        const scale = Math.min(maxScale, Math.max(minScale, 1 + rms * 4)); // amplify a bit
+        if (mouth) mouth.style.transform = `scaleY(${scale})`;
+        // add speaking class if above threshold
+        const avatar = document.getElementById('avatarCard');
+        if (avatar) {
+          if (rms > 0.006) avatar.classList.add('speaking');
+          else avatar.classList.remove('speaking');
+        }
+      } catch (e) {}
+    }, 60);
+  }
+
+  function disconnectBotAudio() {
+    if (analyzerInterval) { clearInterval(analyzerInterval); analyzerInterval = null; }
+    if (sourceNode) { try { sourceNode.disconnect(); } catch(e){} sourceNode = null; }
+    if (analyser) { analyser.disconnect(); analyser = null; }
+    if (audioContext) { try { audioContext.close(); } catch(e){} audioContext = null; }
+  }
+
+  // expose the APIs globally
+  window.startBotSpeaking = startBotSpeaking;
+  window.stopBotSpeaking = stopBotSpeaking;
+  window.botGesture = botGesture;
+  window.connectBotAudio = connectBotAudio;
+  window.disconnectBotAudio = disconnectBotAudio;
+
+  // ---- robust DOM ready call ----
   domReady(initWidget);
 
   function initWidget(){
@@ -104,6 +300,7 @@
           <button type="button" class="cb-close" aria-label="Close chat">×</button>
         </div>
         <div class="cb-body">
+          <!-- Avatar will be inserted here by JS -->
           <div class="cb-messages" id="cb-messages" aria-live="polite"></div>
         </div>
         <div class="cb-footer">
@@ -118,10 +315,14 @@
     `;
     document.body.appendChild(wrapper);
 
+    // grab elements
     const closeBtn = wrapper.querySelector(".cb-close");
     const messagesEl = wrapper.querySelector("#cb-messages");
     const inputEl = wrapper.querySelector("#cb-input");
     const sendBtn = wrapper.querySelector("#cb-send");
+
+    // insert avatar now
+    insertAvatarInto(wrapper);
 
     // hidden file input for upload (Pro+)
     const fileInput = document.createElement("input");
@@ -129,7 +330,7 @@
     fileInput.style.display = "none";
     document.body.appendChild(fileInput);
 
-    // ---- UI functions ----
+    // ---- UI functions (unchanged but with slight hooks to speaking) ----
     function createBubble(role, html, ts) {
       const b = document.createElement("div");
       b.className = "cb-msg " + (role === "user" ? "cb-msg-user" : "cb-msg-bot");
@@ -147,6 +348,9 @@
     }
 
     function addBot(text, extra = {}) {
+      // When we add a bot reply, briefly animate speaking to improve interactivity.
+      // Start speaking now, stop shortly after UI render (or let TTS override via connectBotAudio).
+      try { startBotSpeaking(); } catch(e){}
       let html;
       if (extra && extra.type === "card") {
         const title = extra.title ? `<div style="font-weight:600;margin-bottom:6px">${esc(extra.title)}</div>` : "";
@@ -172,6 +376,9 @@
           if (payload) { inputEl.value = payload; inputEl.focus(); sendMessage(); }
         });
       });
+
+      // stop speaking after a short moment unless audio connected
+      setTimeout(()=>{ try{ stopBotSpeaking(); }catch(e){} }, 900);
     }
 
     function showTyping() {
@@ -320,6 +527,8 @@
 
         const reply = data.reply || data.text || data.message || "";
         const extra = data.extra || null;
+
+        // If you want automatic speaking for non-stream responses, we already call startBotSpeaking in addBot.
         addBot(reply || "No reply", extra);
 
         if (typeof data.remaining === "number") {
@@ -443,7 +652,7 @@
 
     fileInput.addEventListener("change", (e) => { const f = e.target.files && e.target.files[0]; if (f) uploadFile(f); fileInput.value = ""; });
 
-    // expose API for debug
+    // expose API for debug & integration
     window.__mascotWidget = Object.assign(window.__mascotWidget || {}, {
       sessionId,
       plan: EFFECTIVE_PLAN,
@@ -451,7 +660,13 @@
       open: () => { activateIfNeeded().then(()=>openChat()); },
       close: closeChat,
       sendMessage,
-      getState: () => ({ sessionId, plan: EFFECTIVE_PLAN, activeSite, demoRemaining, history })
+      getState: () => ({ sessionId, plan: EFFECTIVE_PLAN, activeSite, demoRemaining, history }),
+      // new: avatar/audio helpers
+      startBotSpeaking,
+      stopBotSpeaking,
+      botGesture,
+      connectBotAudio,
+      disconnectBotAudio
     });
 
     // initial render
