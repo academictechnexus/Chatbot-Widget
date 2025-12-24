@@ -1,227 +1,202 @@
-/* =====================================================
-   TECHASSIST AI — ENTERPRISE CHAT UI
-   Drop-in CSS replacement (NO backend impact)
-   ===================================================== */
+/* =================================================
+   CRISP COMPACT — FINAL PRODUCTION CHAT UI
+   Clean • Minimal • Sellable • No avatar
+   ================================================= */
 
 :root{
-  --primary:#7c6cff;
-  --primary-soft:#8b7cff;
+  --accent:#6c5cff;
+  --accent-hover:#5a4df0;
 
-  --bg-main:#1c1f4a;
-  --bg-main-2:#222663;
+  --bg:#0f172a;
+  --panel:#111827;
+  --border:rgba(255,255,255,.08);
 
-  --card-bot:#1f2937;
-  --card-user:#6d6afc;
+  --bot:#1f2937;
+  --user:#6c5cff;
 
-  --text-main:#e5e7eb;
-  --text-muted:#a1a1aa;
+  --text:#e5e7eb;
+  --muted:#9ca3af;
 
+  --radius:14px;
   --radius-lg:18px;
-  --radius-md:14px;
-  --radius-sm:10px;
-
-  --font: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  --font:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;
   --z:2147483647;
 }
 
-/* ---------------- Launcher ---------------- */
+/* -------- Launcher -------- */
 .cb-launcher{
   position:fixed;
-  right:22px;
-  bottom:22px;
-  width:60px;
-  height:60px;
+  right:20px;
+  bottom:20px;
+  width:56px;
+  height:56px;
   border-radius:50%;
   border:none;
-  background:linear-gradient(135deg,var(--primary),var(--primary-soft));
-  box-shadow:0 16px 40px rgba(124,108,255,.45);
+  background:var(--accent);
+  box-shadow:0 12px 32px rgba(108,92,255,.4);
   cursor:pointer;
   z-index:var(--z);
 }
-.cb-launcher svg{fill:#fff;width:22px;height:22px}
+.cb-launcher svg{width:22px;height:22px;fill:#fff}
 
-/* ---------------- Wrapper ---------------- */
+/* -------- Wrapper -------- */
 .cb-wrapper{
   position:fixed;
-  right:24px;
-  bottom:100px;
-  width:390px;
-  height:700px;
+  right:22px;
+  bottom:88px;
+  width:360px;
+  height:560px;
   display:none;
-  z-index:calc(var(--z)-1);
   font-family:var(--font);
+  z-index:calc(var(--z)-1);
 }
 
-/* ---------------- Card ---------------- */
+/* -------- Card -------- */
 .cb-card{
-  width:100%;
   height:100%;
-  background:linear-gradient(180deg,var(--bg-main),var(--bg-main-2));
-  border-radius:22px;
-  overflow:hidden;
+  background:var(--panel);
+  border-radius:18px;
   display:flex;
   flex-direction:column;
-  box-shadow:0 40px 90px rgba(0,0,0,.7);
+  overflow:hidden;
+  box-shadow:0 30px 70px rgba(0,0,0,.7);
 }
 
-/* ---------------- Header ---------------- */
+/* -------- Header -------- */
 .cb-header{
-  height:58px;
-  background:transparent;
-  color:#fff;
+  height:52px;
+  padding:0 14px;
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:0 16px;
-  font-weight:600;
+  border-bottom:1px solid var(--border);
 }
-.cb-title{
+.cb-header-left{
   display:flex;
   align-items:center;
-  gap:8px;
+  gap:10px;
 }
-.cb-title::before{
-  content:"●";
-  color:#22c55e;
-  font-size:10px;
+.cb-title{
+  font-size:14px;
+  font-weight:600;
+  color:#fff;
+}
+.cb-status{
+  width:8px;
+  height:8px;
+  background:#22c55e;
+  border-radius:50%;
 }
 .cb-close{
   background:none;
   border:none;
-  color:#fff;
-  font-size:20px;
   cursor:pointer;
 }
+.cb-close svg{width:18px;height:18px;fill:#9ca3af}
 
-/* ---------------- Body ---------------- */
+/* -------- Body -------- */
 .cb-body{
   flex:1;
-  padding:18px 16px 10px;
+  padding:14px;
   overflow:hidden;
 }
-
-/* ---------------- Messages ---------------- */
 .cb-messages{
   height:100%;
   overflow-y:auto;
   display:flex;
   flex-direction:column;
-  gap:18px;
+  gap:10px;
 }
 
-/* Assistant label */
-.cb-msg-bot::before{
-  content:"ASSISTANT";
-  display:block;
-  font-size:11px;
-  color:var(--text-muted);
-  margin-bottom:6px;
-  letter-spacing:.04em;
+/* -------- Messages -------- */
+.cb-msg{
+  max-width:78%;
+  padding:10px 12px;
+  font-size:13.5px;
+  line-height:1.45;
+  border-radius:var(--radius);
+  word-break:break-word;
 }
-
-/* Bot message */
 .cb-msg-bot{
-  max-width:85%;
-  background:var(--card-bot);
-  color:var(--text-main);
-  padding:14px 16px;
-  border-radius:var(--radius-lg);
-  font-size:14px;
-  line-height:1.55;
-  box-shadow:0 12px 28px rgba(0,0,0,.35);
+  background:var(--bot);
+  color:var(--text);
+  align-self:flex-start;
 }
-
-/* User message */
 .cb-msg-user{
-  align-self:flex-end;
-  max-width:85%;
-  background:var(--card-user);
+  background:var(--user);
   color:#fff;
-  padding:14px 18px;
-  border-radius:var(--radius-lg);
-  font-size:14px;
-  line-height:1.55;
-  box-shadow:0 12px 28px rgba(124,108,255,.45);
-  position:relative;
+  align-self:flex-end;
 }
 
-/* Read timestamp */
-.cb-msg-user::after{
-  content:"READ";
-  position:absolute;
-  right:12px;
-  bottom:-16px;
-  font-size:10px;
-  color:#c7c7ff;
+/* -------- Typing -------- */
+.cb-typing-dot{
+  width:6px;
+  height:6px;
+  background:var(--muted);
+  border-radius:50%;
+  animation:blink 1.4s infinite both;
+}
+.cb-typing-dot:nth-child(2){animation-delay:.2s}
+.cb-typing-dot:nth-child(3){animation-delay:.4s}
+@keyframes blink{
+  0%,80%,100%{opacity:.3}
+  40%{opacity:1}
 }
 
-/* ---------------- Quick Action Buttons ---------------- */
-.cb-quick-btn{
-  background:rgba(255,255,255,.08);
-  color:#e5e7eb;
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:999px;
-  padding:6px 14px;
-  font-size:12px;
-  cursor:pointer;
-  margin-right:8px;
-  margin-top:6px;
-}
-.cb-quick-btn:hover{
-  background:rgba(255,255,255,.16);
-}
-
-/* ---------------- Footer ---------------- */
+/* -------- Footer -------- */
 .cb-footer{
-  padding:14px;
-  background:rgba(0,0,0,.15);
-  border-top:1px solid rgba(255,255,255,.08);
+  padding:10px;
+  border-top:1px solid var(--border);
 }
-
 .cb-input-shell{
   display:flex;
   align-items:center;
-  gap:10px;
-  background:rgba(255,255,255,.08);
+  gap:8px;
+  background:#0b1220;
   border-radius:999px;
-  padding:10px 14px;
+  padding:8px 10px;
 }
-
 #cb-input{
   flex:1;
-  background:transparent;
+  background:none;
   border:none;
   outline:none;
-  color:#fff;
-  font-size:14px;
+  color:var(--text);
+  font-size:13.5px;
 }
 
-.cb-send-btn{
-  width:42px;
-  height:42px;
-  border-radius:50%;
+/* -------- Icon buttons -------- */
+.cb-icon-btn{
+  background:none;
   border:none;
-  background:var(--primary);
+  cursor:pointer;
+}
+.cb-icon-btn svg{
+  width:18px;
+  height:18px;
+  fill:#9ca3af;
+}
+.cb-icon-btn:hover svg{fill:#fff}
+
+/* -------- Send -------- */
+.cb-send-btn{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  background:var(--accent);
+  border:none;
   display:flex;
   align-items:center;
   justify-content:center;
-  cursor:pointer;
 }
-.cb-send-btn svg{fill:#fff;width:18px;height:18px}
+.cb-send-btn svg{width:18px;height:18px;fill:#fff}
 
-/* ---------------- Scrollbar ---------------- */
-.cb-messages::-webkit-scrollbar{width:6px}
-.cb-messages::-webkit-scrollbar-thumb{
-  background:rgba(255,255,255,.2);
-  border-radius:6px;
-}
-
-/* ---------------- Mobile ---------------- */
+/* -------- Mobile -------- */
 @media(max-width:520px){
   .cb-wrapper{
-    width:95vw;
+    width:94vw;
     height:80vh;
-    right:2.5vw;
+    right:3vw;
     bottom:16px;
   }
 }
