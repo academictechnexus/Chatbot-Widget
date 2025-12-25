@@ -1,15 +1,19 @@
 :root{
   --accent:#6d4bf4;
   --accent-dark:#5b3ee6;
+  --accent-soft:#ede9fe;
   --bg:#ffffff;
-  --soft:#f6f7fb;
+  --page:#fafafa;
+  --bot:#f1f5f9;
   --border:#e5e7eb;
-  --radius:22px;
-  --shadow:0 18px 45px rgba(0,0,0,.18);
+  --text:#0f172a;
+  --muted:#64748b;
+  --radius:28px;
+  --shadow:0 22px 50px rgba(0,0,0,.18);
   --font:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
 }
 
-/* ---------- Launcher ---------- */
+/* ---------------- Launcher ---------------- */
 .cb-launcher{
   position:fixed;
   bottom:22px;
@@ -22,27 +26,26 @@
   align-items:center;
   justify-content:center;
   cursor:pointer;
-  box-shadow:0 10px 30px rgba(0,0,0,.25);
+  box-shadow:0 14px 34px rgba(0,0,0,.35);
   z-index:999999;
 }
-.cb-launcher-icon svg{width:22px;height:22px;fill:#fff}
+.cb-launcher svg{width:22px;height:22px;fill:#fff}
 
-/* ---------- Widget ---------- */
+/* ---------------- Widget ---------------- */
 .cb-wrapper{
   position:fixed;
   bottom:96px;
   right:22px;
   width:380px;
-  height:560px;
+  height:620px;
   display:none;
   z-index:999998;
 }
 
 .cb-card{
-  width:100%;
   height:100%;
   background:var(--bg);
-  border-radius:var(--radius);
+  border-radius:32px;
   box-shadow:var(--shadow);
   display:flex;
   flex-direction:column;
@@ -50,105 +53,151 @@
   font-family:var(--font);
 }
 
-/* ---------- Header ---------- */
+/* ---------------- Header ---------------- */
 .cb-header{
-  background:linear-gradient(135deg,var(--accent),var(--accent-dark));
-  color:#fff;
-  padding:16px 18px;
+  padding:18px 20px;
   display:flex;
   align-items:center;
   justify-content:space-between;
   font-weight:600;
+  font-size:15px;
+  color:var(--text);
 }
+
+.cb-header-left{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.cb-ai-icon{
+  width:26px;
+  height:26px;
+  border-radius:50%;
+  background:var(--accent-soft);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.cb-ai-icon svg{width:16px;height:16px;fill:var(--accent)}
 
 .cb-close{
   background:none;
   border:none;
-  color:#fff;
-  font-size:18px;
+  font-size:20px;
   cursor:pointer;
+  color:#475569;
 }
 
-/* ---------- Body ---------- */
+/* ---------------- Body ---------------- */
 .cb-body{
   flex:1;
-  background:var(--soft);
-  padding:20px 18px;
+  background:var(--page);
+  padding:18px;
   overflow:hidden;
 }
 
-/* Assistant Home */
-.cb-home{
-  text-align:center;
-  margin-bottom:20px;
-}
-.cb-home h2{
-  font-size:22px;
-  font-weight:700;
-  margin:8px 0 6px;
-}
-.cb-home p{
-  font-size:18px;
-  font-weight:600;
-  color:#1f2937;
-  margin-bottom:18px;
-}
-
-/* Cards */
-.cb-home-cards{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-.cb-home-card{
-  background:#eef1f7;
-  border:none;
-  border-radius:16px;
-  padding:14px 16px;
-  text-align:left;
-  font-size:14px;
-  cursor:pointer;
-}
-.cb-home-card:hover{
-  background:#e0e7ff;
-}
-
-/* Messages */
 .cb-messages{
   height:100%;
   overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
 }
 
-.cb-msg{
-  max-width:78%;
-  padding:12px 15px;
-  border-radius:16px;
-  font-size:14px;
-  margin-bottom:10px;
+/* Intro */
+.cb-intro{
+  text-align:center;
+  margin-top:90px;
+  color:var(--muted);
 }
+.cb-intro svg{
+  width:56px;
+  height:56px;
+  margin-bottom:18px;
+}
+.cb-intro h2{
+  font-size:18px;
+  font-weight:600;
+  color:var(--text);
+}
+
+/* ---------------- Messages ---------------- */
+.cb-msg{
+  max-width:85%;
+  padding:14px 18px;
+  border-radius:18px;
+  font-size:14px;
+  line-height:1.55;
+}
+
 .cb-msg-bot{
-  background:#e9edf2;
+  background:var(--bot);
+  color:var(--text);
   margin-right:auto;
 }
+
 .cb-msg-user{
   background:linear-gradient(135deg,var(--accent),var(--accent-dark));
   color:#fff;
   margin-left:auto;
+  border-radius:999px;
+  padding:10px 22px;
 }
 
-/* ---------- Footer ---------- */
+/* Typing */
+.cb-typing{
+  display:flex;
+  gap:6px;
+}
+.cb-typing-dot{
+  width:6px;
+  height:6px;
+  background:#94a3b8;
+  border-radius:50%;
+  animation:blink 1.4s infinite both;
+}
+.cb-typing-dot:nth-child(2){animation-delay:.2s}
+.cb-typing-dot:nth-child(3){animation-delay:.4s}
+@keyframes blink{
+  0%{opacity:.25}
+  20%{opacity:1}
+  100%{opacity:.25}
+}
+
+/* Quick buttons */
+.cb-quick-btn{
+  margin-top:10px;
+  padding:8px 14px;
+  border-radius:999px;
+  border:none;
+  background:var(--accent-soft);
+  color:var(--accent-dark);
+  font-size:13px;
+  cursor:pointer;
+}
+
+/* ---------------- Footer ---------------- */
 .cb-footer{
-  background:#fff;
-  border-top:1px solid var(--border);
   padding:14px;
+  background:#fff;
 }
 
 .cb-input-shell{
   display:flex;
+  align-items:center;
   gap:10px;
-  padding:10px 14px;
-  border-radius:40px;
   border:1px solid var(--border);
+  border-radius:999px;
+  padding:8px 12px;
+}
+
+.cb-input-shell button{
+  background:none;
+  border:none;
+  cursor:pointer;
+  color:#64748b;
+  font-size:18px;
 }
 
 #cb-input{
@@ -158,12 +207,14 @@
   font-size:14px;
 }
 
+/* Send */
 .cb-send-btn{
-  width:46px;
-  height:46px;
+  width:38px;
+  height:38px;
   border-radius:50%;
-  border:none;
   background:linear-gradient(135deg,var(--accent),var(--accent-dark));
-  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
-.cb-send-btn svg{width:18px;height:18px;fill:#fff}
+.cb-send-btn svg{width:16px;height:16px;fill:#fff}
