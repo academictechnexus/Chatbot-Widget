@@ -106,29 +106,40 @@
   margin-right:auto;
 }
 
-/* 🔮 CENTER THINKING ORB (META AI STYLE) */
-.cb-thinking-orb{
+/* 🔮 CENTER ORB (META AI STYLE) */
+.cb-orb{
   position:absolute;
   top:50%;
   left:50%;
   transform:translate(-50%,-50%);
-  width:64px;
-  height:64px;
+  width:72px;
+  height:72px;
   border-radius:50%;
-  background:radial-gradient(circle at 30% 30%, #b9a7ff, var(--accent));
+  background:radial-gradient(circle at 30% 30%, #c4b5fd, var(--accent));
   animation:orbPulse 1.6s ease-in-out infinite;
-  display:none;
-  z-index:10;
+  z-index:5;
 }
-.cb-thinking .cb-thinking-orb{
-  display:block;
-}
+.cb-orb.hidden{display:none}
 
 @keyframes orbPulse{
   0%{transform:translate(-50%,-50%) scale(1);opacity:.6}
-  50%{transform:translate(-50%,-50%) scale(1.25);opacity:1}
+  50%{transform:translate(-50%,-50%) scale(1.3);opacity:1}
   100%{transform:translate(-50%,-50%) scale(1);opacity:.6}
 }
+
+/* Drag overlay */
+.cb-drop{
+  position:absolute;
+  inset:0;
+  background:rgba(109,75,244,.08);
+  border:2px dashed var(--accent);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  font-weight:600;
+  z-index:6;
+}
+.cb-drop.active{display:flex}
 
 /* Footer */
 .cb-footer{
@@ -141,7 +152,6 @@
   color:var(--muted);
   text-align:center;
   margin-bottom:6px;
-  pointer-events:none;
 }
 
 /* Input */
@@ -185,3 +195,17 @@
   background:linear-gradient(135deg,var(--accent),var(--accent-dark)) !important;
 }
 .cb-send-btn svg{stroke:#fff}
+
+/* Voice */
+.cb-mic-active{
+  background:rgba(109,75,244,.15);
+}
+.cb-mic-active svg{
+  stroke:var(--accent);
+  animation:pulse 1.4s infinite;
+}
+@keyframes pulse{
+  0%{transform:scale(1);opacity:.6}
+  50%{transform:scale(1.15);opacity:1}
+  100%{transform:scale(1);opacity:.6}
+}
