@@ -1,44 +1,72 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Chatbot Widget Demo</title>
-  <link rel="stylesheet" href="widget.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chatbot Widget Preview</title>
+
+  <!-- Page styles -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      padding: 40px;
+      text-align: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    h1 { font-size: 28px; color: #333; margin: 0 0 8px; }
+    p { font-size: 16px; color: #555; margin: 0 0 18px; }
+    code {
+      display: inline-block;
+      background: #eee;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .box {
+      margin-top: 40px;
+      padding: 20px;
+      background: white;
+      max-width: 760px;
+      margin-left: auto;
+      margin-right: auto;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      text-align: left;
+    }
+    footer { margin-top: 28px; color: #888; font-size: 13px; }
+  </style>
+
+  <!-- Chatbot widget CSS (local file) -->
+  <link rel="stylesheet" href="./chatbot-widget.css">
 </head>
 <body>
-  <h1>Demo Page</h1>
-  <p>Your website content goes here.</p>
 
-  <!-- Floating Bubble -->
-  <div id="cb-launcher">💬</div>
+  <h1>Chatbot Widget Hosted — Preview</h1>
+  <p>Scroll to the bottom-right — you should see the floating chat launcher. Click it to open the widget.</p>
 
-  <!-- Chat Panel -->
-  <div id="cb-panel" class="hidden">
-    <div class="cb-header">
-      <span>Hello 👋</span>
-      <button id="cb-close">✕</button>
-    </div>
+  <div class="box">
+    <h2 style="margin-top:0">Embed instructions</h2>
+    <p>To embed this widget on any page, include the stylesheet in the <code>&lt;head&gt;</code> and the script before <code>&lt;/body&gt;</code> (or at the end of your body):</p>
+    <pre style="background:#fafafa;padding:12px;border-radius:8px;border:1px solid #eee">
+&lt;link rel="stylesheet" href="./chatbot-widget.css"&gt;
+...
+&lt;script src="./chatbot-widget.js" data-plan="basic" data-token="YOUR_TOKEN_IF_ANY" data-site="example.com"&gt;&lt;/script&gt;
+    </pre>
 
-    <div class="cb-greeting">
-      <h2>What are we going to do today?</h2>
-      <div class="cb-cards">
-        <button data-prompt="Help me learn a new language">🌍 Learn a language</button>
-        <button data-prompt="Take a mock interview">🧑‍💼 Mock interview</button>
-        <button data-prompt="Give me a product idea">💡 Product idea</button>
-      </div>
-    </div>
+    <p><strong>Note:</strong> If you serve assets from a subfolder (for example <code>/assets/</code>), update the paths accordingly.</p>
 
-    <div class="cb-chat">
-      <div class="cb-messages" id="messages"></div>
-    </div>
-
-    <div class="cb-input">
-      <input id="cb-text" placeholder="Ask something..." />
-      <button id="cb-send">➤</button>
-    </div>
+    <p style="margin-top:8px">You can also open the widget programmatically from the console:</p>
+    <code>__mascotWidget.open()</code>
   </div>
 
-  <script src="widget.js"></script>
+  <footer>
+    Test tips: hard-refresh after upload (Ctrl+Shift+R), or open in an incognito window to avoid stale cache.
+  </footer>
+
+  <!-- Chatbot widget script (local file) -->
+  <!-- Keep the data attributes if you want activation/plan behavior -->
+  <script src="./chatbot-widget.js" data-plan="basic"></script>
 </body>
 </html>
