@@ -1,7 +1,6 @@
 :root{
   --accent:#6d4bf4;
   --accent-dark:#5b3ee6;
-  --accent-soft:#ede9fe;
   --bg:#ffffff;
   --page:#fafafa;
   --bot:#f1f5f9;
@@ -13,7 +12,7 @@
   --font:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
 }
 
-/* ---------- Launcher ---------- */
+/* Launcher */
 .cb-launcher{
   position:fixed;
   bottom:22px;
@@ -31,7 +30,7 @@
 }
 .cb-launcher svg{width:22px;height:22px;fill:#fff}
 
-/* ---------- Wrapper ---------- */
+/* Wrapper */
 .cb-wrapper{
   position:fixed;
   bottom:96px;
@@ -53,44 +52,37 @@
   font-family:var(--font);
 }
 
-/* ---------- Header ---------- */
+/* Header */
 .cb-header{
-  padding:18px 20px;
+  padding:16px 18px;
   display:flex;
   align-items:center;
   justify-content:space-between;
-  font-weight:600;
-  font-size:15px;
-  color:var(--text);
 }
 .cb-header-left{
   display:flex;
   align-items:center;
   gap:10px;
+  font-weight:600;
 }
 .cb-ai-icon{
-  width:26px;
-  height:26px;
-  border-radius:50%;
-  background:var(--accent-soft);
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  width:26px;height:26px;border-radius:50%;
+  background:#ede9fe;
+  display:flex;align-items:center;justify-content:center;
 }
 .cb-ai-icon svg{width:16px;height:16px;fill:var(--accent)}
-.cb-close{
-  background:none;
-  border:none;
-  font-size:20px;
-  cursor:pointer;
-  color:#475569;
+.cb-header-actions{
+  display:flex;gap:6px;
+}
+.cb-header-actions button{
+  background:none;border:none;cursor:pointer;font-size:18px;color:#64748b;
 }
 
-/* ---------- Body ---------- */
+/* Body */
 .cb-body{
   flex:1;
   background:var(--page);
-  padding:18px;
+  padding:16px;
   overflow:hidden;
 }
 .cb-messages{
@@ -104,17 +96,16 @@
 /* Messages */
 .cb-msg{
   max-width:85%;
-  padding:14px 18px;
+  padding:12px 16px;
   border-radius:18px;
   font-size:14px;
-  line-height:1.55;
+  line-height:1.5;
+  position:relative;
 }
 .cb-msg-user{
   background:linear-gradient(135deg,var(--accent),var(--accent-dark));
   color:#fff;
   margin-left:auto;
-  border-radius:999px;
-  padding:10px 22px;
 }
 .cb-msg-bot{
   background:var(--bot);
@@ -122,14 +113,32 @@
   margin-right:auto;
 }
 
-/* ---------- Footer / Input ---------- */
+/* Message actions */
+.cb-msg-actions{
+  position:absolute;
+  right:8px;
+  bottom:-22px;
+  display:flex;
+  gap:6px;
+  opacity:0;
+}
+.cb-msg-bot:hover .cb-msg-actions{opacity:1}
+.cb-msg-actions button{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:50%;
+  width:24px;height:24px;
+  cursor:pointer;
+  font-size:12px;
+}
+
+/* Footer */
 .cb-footer{
   padding:12px;
   border-top:1px solid var(--border);
   background:#fff;
 }
 
-/* 🔑 THIS IS THE FIX */
 .cb-input-shell{
   display:flex;
   align-items:center;
@@ -139,47 +148,17 @@
   padding:8px 12px;
 }
 
-/* Icon buttons */
 .cb-input-shell button{
-  width:34px;
-  height:34px;
-  min-width:34px;
-  min-height:34px;
-  border:none;
-  background:none;
+  width:34px;height:34px;
+  border:none;background:none;
   border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
   cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+.cb-input-shell svg{
+  width:18px;height:18px;fill:#64748b;
 }
 
-.cb-input-shell button svg{
-  width:18px;
-  height:18px;
-  fill:#64748b;
-}
-
-.cb-input-shell button:hover{
-  background:#f1f5f9;
-}
-
-/* Voice active */
-.cb-input-shell button.voice-active{
-  background:rgba(109,75,244,.15);
-}
-.cb-input-shell button.voice-active svg{
-  fill:var(--accent);
-  animation:micPulse 1.4s infinite;
-}
-
-@keyframes micPulse{
-  0%{transform:scale(1);opacity:.7}
-  50%{transform:scale(1.2);opacity:1}
-  100%{transform:scale(1);opacity:.7}
-}
-
-/* Text input */
 #cb-input{
   flex:1;
   border:none;
@@ -187,12 +166,10 @@
   font-size:14px;
   padding:6px 4px;
   background:transparent;
+  pointer-events:auto;
 }
 
-/* Send */
 .cb-send-btn{
   background:linear-gradient(135deg,var(--accent),var(--accent-dark)) !important;
 }
-.cb-send-btn svg{
-  fill:#fff !important;
-}
+.cb-send-btn svg{fill:#fff !important}
