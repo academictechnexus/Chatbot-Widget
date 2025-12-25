@@ -1,13 +1,13 @@
-/* chatbot-widget.js — BASELINE PRESERVED + META START + FOLLOWUPS + EMOJI */
+/* chatbot-widget.js — FULL BASELINE PRESERVED + FINAL POLISH */
 
 (function () {
   "use strict";
 
+  /* ================= CONFIG (UNCHANGED) ================= */
   const API_BASE = window.__MASCOT_API_BASE || "https://mascot.academictechnexus.com";
   const CHAT_API = `${API_BASE}/chat`;
   const UPLOAD_API = `${API_BASE}/mascot/upload`;
   const KEY_SESSION = "mascot_session_id_v1";
-
   const DEMO_LEFT = window.__MASCOT_DEMO_REMAINING;
 
   const esc = s =>
@@ -27,14 +27,14 @@
 
   function init() {
 
-    /* ---------- Launcher ---------- */
+    /* ================= LAUNCHER ================= */
     const launcher = document.createElement("button");
     launcher.className = "cb-launcher";
     launcher.innerHTML =
       `<svg viewBox="0 0 24 24"><path d="M12 2l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg>`;
     document.body.appendChild(launcher);
 
-    /* ---------- Widget ---------- */
+    /* ================= WIDGET ================= */
     const wrapper = document.createElement("div");
     wrapper.className = "cb-wrapper";
     wrapper.innerHTML = `
@@ -52,7 +52,7 @@
 
         <div class="cb-body" id="cb-body">
           <div class="cb-orb" id="cb-orb"></div>
-          <div class="cb-drop" id="cb-drop">Drop file to upload</div>
+          <div class="cb-drop" id="cb-drop"></div>
           <div class="cb-messages" id="msgs"></div>
         </div>
 
@@ -79,7 +79,7 @@
     `;
     document.body.appendChild(wrapper);
 
-    /* ---------- Elements ---------- */
+    /* ================= ELEMENTS ================= */
     const msgs = wrapper.querySelector("#msgs");
     const input = wrapper.querySelector("#cb-input");
     const sendBtn = wrapper.querySelector("#cb-send");
@@ -91,17 +91,19 @@
     const drop = wrapper.querySelector("#cb-drop");
     const body = wrapper.querySelector("#cb-body");
 
-    let firstMessageSent = false;
+    let greeted = false;
 
-    /* ---------- Initial Greeting ---------- */
-    function showInitialGreeting() {
+    /* ================= INITIAL GREETING ================= */
+    function greetOnce() {
+      if (greeted) return;
+      greeted = true;
       const d = document.createElement("div");
       d.className = "cb-msg cb-msg-bot";
       d.textContent = "Hello! I'm your AI assistant. How can I help you today?";
       msgs.appendChild(d);
     }
 
-    /* ---------- Upload ---------- */
+    /* ================= UPLOAD ================= */
     const fileInput = document.createElement("input");
     fileInput.type = "file";
     fileInput.style.display = "none";
@@ -116,10 +118,10 @@
       const fd = new FormData();
       fd.append("mascot", f, f.name);
       fetch(UPLOAD_API, { method: "POST", body: fd })
-        .then(() => addBot("Upload complete."));
+        .then(() => addBot("Upload complete."))
+        .catch(() => addBot("Upload failed."));
     }
 
-    /* ---------- Drag & Drop ---------- */
     body.addEventListener("dragover", e => {
       e.preventDefault();
       drop.classList.add("active");
@@ -131,20 +133,17 @@
       handleFile(e.dataTransfer.files[0]);
     });
 
-    /* ---------- Open / Close ---------- */
+    /* ================= OPEN / CLOSE ================= */
     launcher.onclick = () => {
       wrapper.style.display = "flex";
-      if (!msgs.hasChildNodes()) {
-        orb.classList.remove("hidden");
-        showInitialGreeting();
-      }
+      orb.classList.remove("hidden");
+      greetOnce();
       input.focus();
     };
     wrapper.querySelector("#cb-close").onclick = () => wrapper.style.display = "none";
 
-    /* ---------- Messages ---------- */
+    /* ================= MESSAGE HELPERS ================= */
     function addUser(t) {
-      firstMessageSent = true;
       orb.classList.add("hidden");
       const d = document.createElement("div");
       d.className = "cb-msg cb-msg-user";
@@ -171,6 +170,7 @@
       msgs.scrollTop = msgs.scrollHeight;
     }
 
+    /* ================= SEND ================= */
     async function send(text) {
       addUser(text);
       input.value = "";
@@ -206,27 +206,25 @@
 
     sendBtn.onclick = () => input.value.trim() && send(input.value.trim());
     input.addEventListener("keydown", e => {
-      if (e.key === "Enter" && input.value.trim()) {
-        send(input.value.trim());
-      }
+      if (e.key === "Enter" && input.value.trim()) send(input.value.trim());
     });
 
-    /* ---------- Emoji ---------- */
+    /* ================= EMOJI ================= */
     emojiBtn.onclick = () => {
       emojiBox.style.display = emojiBox.style.display === "flex" ? "none" : "flex";
     };
     emojiBox.onclick = e => {
-      if (e.target.nodeType === 3) {
-        input.value += e.target.textContent.trim();
-      }
+      if (e.target.nodeType === 3) input.value += e.target.textContent.trim();
     };
 
-    /* ---------- Voice (UNCHANGED LOGIC) ---------- */
+    /* ================= VOICE (UNCHANGED, VERIFIED) ================= */
     const SpeechAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechAPI) {
       const recog = new SpeechAPI();
       recog.lang = "en-US";
       recog.continuous = true;
+      recog.interimResults = false;
+
       let voiceOn = false;
 
       micBtn.onclick = () => {
