@@ -1,4 +1,4 @@
-/* chatbot-widget.js — FULL PRODUCTION (FIXED INPUT + VOICE + UPLOAD) */
+/* chatbot-widget.js — FULL PRODUCTION (FIXED + PHASE 3) */
 
 (function () {
   "use strict";
@@ -8,9 +8,9 @@
   const UPLOAD_API = `${API_BASE}/mascot/upload`;
   const KEY_SESSION = "mascot_session_id_v1";
 
-  const esc = s => s ? s.replace(/[&<>]/g, c => ({
-    '&':'&amp;','<':'&lt;','>':'&gt;'
-  }[c])) : "";
+  function esc(s){
+    return s ? s.replace(/[&<>]/g,c=>({ "&":"&amp;","<":"&lt;",">":"&gt;" }[c])) : "";
+  }
 
   function getSession(){
     let s = localStorage.getItem(KEY_SESSION);
@@ -45,12 +45,6 @@
             AI Assistant
           </div>
           <div class="cb-header-actions">
-            <button id="cb-upload-btn" title="Upload">
-              <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/></svg>
-            </button>
-            <button id="cb-emoji-btn" title="Emoji">
-              <svg viewBox="0 0 24 24"><path d="M12 22a10 10 0 100-20 10 10 0 000 20zm-3-8a1 1 0 102 0 1 1 0 00-2 0zm4 0a1 1 0 102 0 1 1 0 00-2 0zm-5 3a5 5 0 008 0"/></svg>
-            </button>
             <button id="cb-close">×</button>
           </div>
         </div>
@@ -59,12 +53,22 @@
           <div class="cb-messages" id="msgs"></div>
         </div>
 
+        <div class="cb-context">
+          🔒 Using this page content to answer
+        </div>
+
         <div class="cb-footer">
           <div class="cb-input-shell">
-            <button id="cb-mic">
+            <button id="cb-upload" title="Upload">
+              <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/></svg>
+            </button>
+
+            <button id="cb-mic" title="Voice">
               <svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm5-3a5 5 0 01-10 0H5a7 7 0 0014 0h-2z"/></svg>
             </button>
+
             <input id="cb-input" type="text" placeholder="Message…" />
+
             <button id="cb-send" class="cb-send-btn">
               <svg viewBox="0 0 24 24"><path d="M4 20l16-8L4 4v6l9 2-9 2z"/></svg>
             </button>
@@ -78,9 +82,9 @@
     const input = wrapper.querySelector("#cb-input");
     const sendBtn = wrapper.querySelector("#cb-send");
     const micBtn = wrapper.querySelector("#cb-mic");
-    const uploadBtn = wrapper.querySelector("#cb-upload-btn");
+    const uploadBtn = wrapper.querySelector("#cb-upload");
 
-    /* File input */
+    /* Hidden file input */
     const fileInput = document.createElement("input");
     fileInput.type = "file";
     fileInput.style.display = "none";
@@ -93,11 +97,10 @@
       addBot(`Uploading ${f.name}…`);
       const fd = new FormData();
       fd.append("mascot", f, f.name);
-      await fetch(UPLOAD_API,{method:"POST",body:fd});
+      await fetch(UPLOAD_API,{ method:"POST", body:fd });
       addBot("Upload complete.");
     };
 
-    /* Open / Close */
     launcher.onclick = () => {
       wrapper.style.display = "flex";
       input.focus();
@@ -107,13 +110,13 @@
     };
     wrapper.querySelector("#cb-close").onclick = () => wrapper.style.display = "none";
 
-    /* Messaging */
     function addUser(t){
       const d = document.createElement("div");
       d.className = "cb-msg cb-msg-user";
       d.textContent = t;
       msgs.appendChild(d);
     }
+
     function addBot(t){
       const d = document.createElement("div");
       d.className = "cb-msg cb-msg-bot";
@@ -145,8 +148,8 @@
     const SpeechAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
     if(SpeechAPI){
       const recog = new SpeechAPI();
-      recog.continuous = true;
       recog.lang = "en-US";
+      recog.continuous = true;
       let voiceOn = false;
 
       micBtn.onclick = () => {
@@ -156,8 +159,8 @@
       };
 
       recog.onresult = e => {
-        const text = e.results[e.results.length - 1][0].transcript.trim();
-        if(text) send(text);
+        const t = e.results[e.results.length - 1][0].transcript.trim();
+        if(t) send(t);
       };
 
       recog.onend = () => voiceOn && recog.start();
