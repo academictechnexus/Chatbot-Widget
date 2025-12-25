@@ -24,7 +24,7 @@
   box-shadow:0 12px 30px rgba(0,0,0,.35);
   z-index:999999;
 }
-.cb-launcher svg{width:22px;height:22px;fill:#fff}
+.cb-launcher svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:2}
 
 /* ---------- Wrapper ---------- */
 .cb-wrapper{
@@ -54,7 +54,7 @@
   width:26px;height:26px;border-radius:50%;
   background:#ede9fe;display:flex;align-items:center;justify-content:center;
 }
-.cb-ai-icon svg{width:16px;height:16px;fill:var(--accent)}
+.cb-ai-icon svg{width:16px;height:16px;stroke:var(--accent);fill:none;stroke-width:2}
 .cb-plan{font-size:12px;color:var(--muted)}
 
 /* ---------- Body ---------- */
@@ -89,6 +89,7 @@
   max-width:85%;
   padding:14px 18px;border-radius:18px;
   font-size:14px;line-height:1.5;
+  position:relative;
 }
 .cb-msg-user{
   background:linear-gradient(135deg,var(--accent),var(--accent-dark));
@@ -96,6 +97,19 @@
 }
 .cb-msg-bot{
   background:var(--bot);color:var(--text);margin-right:auto;
+}
+
+/* Edit icon */
+.cb-edit-btn{
+  position:absolute;
+  right:-22px;top:50%;
+  transform:translateY(-50%);
+  opacity:0;cursor:pointer;
+}
+.cb-msg-user:hover .cb-edit-btn{opacity:1}
+.cb-edit-btn svg{
+  width:16px;height:16px;
+  stroke:#fff;fill:none;stroke-width:2;
 }
 
 /* Typing cursor */
@@ -138,11 +152,15 @@
   border:none;background:none;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
 }
-.cb-input-shell button svg{width:18px;height:18px;stroke:var(--text)}
+.cb-input-shell button svg{
+  width:18px;height:18px;
+  stroke:var(--text);fill:none;stroke-width:2;
+}
 #cb-input{flex:1;border:none;outline:none;background:none}
 
 .cb-send-btn{
-  background:linear-gradient(135deg,var(--accent),var(--accent-dark)) !important;
+  background:linear-gradient(135deg,var(--accent),var(--accent-dark));
+  border-radius:50%;
 }
 .cb-send-btn svg{stroke:#fff}
 
@@ -150,25 +168,14 @@
 .cb-emoji{display:none;gap:6px;padding:8px}
 .cb-emoji span{cursor:pointer;font-size:18px}
 
-/* Voice */
+/* Voice active */
 .cb-mic-active svg{
   stroke:var(--accent);
   animation:pulse 1.2s infinite;
 }
 
-/* Tooltip */
-.cb-input-shell button[title]{position:relative}
-/* --- FIX: input always editable --- */
-#cb-input{
-  pointer-events:auto !important;
-  user-select:text !important;
-  caret-color: var(--text);
-}
-
-/* --- Voice preview styling stays separate --- */
+/* Voice preview */
 .cb-voice-preview{
   font-style:italic;
   color:var(--muted);
 }
-
-
