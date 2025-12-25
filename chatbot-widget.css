@@ -70,9 +70,6 @@
   display:flex;align-items:center;justify-content:center;
 }
 .cb-ai-icon svg{width:16px;height:16px;fill:var(--accent)}
-.cb-header-actions button{
-  background:none;border:none;cursor:pointer;font-size:18px;
-}
 
 /* Body */
 .cb-body{
@@ -108,20 +105,23 @@
   margin-right:auto;
 }
 
-/* Context indicator (Phase 3) */
+/* Footer */
+.cb-footer{
+  border-top:1px solid var(--border);
+  background:#fff;
+  padding:8px 12px 10px;
+}
+
+/* Context INSIDE footer (important) */
 .cb-context{
   font-size:12px;
   color:var(--muted);
-  padding:6px 4px 0;
   text-align:center;
+  margin-bottom:6px;
+  pointer-events:none;
 }
 
-/* Footer */
-.cb-footer{
-  padding:10px 12px;
-  border-top:1px solid var(--border);
-  background:#fff;
-}
+/* Input */
 .cb-input-shell{
   display:flex;
   align-items:center;
@@ -129,16 +129,26 @@
   border:1px solid var(--border);
   border-radius:999px;
   padding:8px 10px;
+  position:relative;
+  z-index:5;
 }
 .cb-input-shell button{
-  width:32px;height:32px;
-  border:none;background:none;
+  width:34px;
+  height:34px;
+  min-width:34px;
+  border:none;
+  background:none;
   border-radius:50%;
   cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
 }
 .cb-input-shell svg{
-  width:18px;height:18px;fill:#6b7280;
+  width:18px;
+  height:18px;
+  fill:#6b7280;
 }
 #cb-input{
   flex:1;
@@ -147,13 +157,17 @@
   font-size:14px;
   padding:6px;
   background:transparent;
+  pointer-events:auto;
+  z-index:10;
 }
+
+/* Send */
 .cb-send-btn{
   background:linear-gradient(135deg,var(--accent),var(--accent-dark)) !important;
 }
 .cb-send-btn svg{fill:#fff}
 
-/* Voice active */
+/* Voice */
 .cb-mic-active{
   background:rgba(109,75,244,.15);
 }
