@@ -1,5 +1,5 @@
 /* chatbot-widget.js — ORIGINAL LOGIC PRESERVED
-   Phase 1: Voice Input added (Web Speech API)
+   Phase 1 Voice: Continuous voice + professional icons
 */
 
 (function () {
@@ -17,11 +17,13 @@
   const KEY_HISTORY = "mascot_history_v1";
 
   const nowIso = () => new Date().toISOString();
-  const esc = s => s ? String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;") : "";
+  const esc = s =>
+    s ? String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;") : "";
 
   function domReady(cb){
-    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", cb);
-    else cb();
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", cb);
+    } else cb();
   }
 
   function getSession(){
@@ -43,31 +45,38 @@
 
   function initWidget(){
 
-    /* ================= UI BUILD (UNCHANGED) ================= */
+    /* ================= UI BUILD ================= */
     const launcher = document.createElement("button");
     launcher.className = "cb-launcher";
-    launcher.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 2l1.8 4.8L18.6 9l-4.8 1.8L12 15.6l-1.8-4.8L5.4 9l4.8-2.2L12 2z"/></svg>`;
+    launcher.innerHTML = `
+      <svg viewBox="0 0 24 24">
+        <path d="M12 2l1.8 4.8L18.6 9l-4.8 1.8L12 15.6l-1.8-4.8L5.4 9l4.8-2.2L12 2z"/>
+      </svg>`;
     document.body.appendChild(launcher);
 
     const wrapper = document.createElement("div");
     wrapper.className = "cb-wrapper";
+    wrapper.style.display = "none";
     wrapper.innerHTML = `
       <div class="cb-card">
         <div class="cb-header">
           <div class="cb-header-left">
             <div class="cb-ai-icon">
-              <svg viewBox="0 0 24 24"><path d="M12 2l1.8 4.8L18.6 9l-4.8 1.8L12 15.6l-1.8-4.8L5.4 9l4.8-2.2L12 2z"/></svg>
+              <svg viewBox="0 0 24 24">
+                <path d="M12 2l1.8 4.8L18.6 9l-4.8 1.8L12 15.6l-1.8-4.8L5.4 9l4.8-2.2L12 2z"/>
+              </svg>
             </div>
             <span class="cb-title">AI Assistant</span>
           </div>
-          <button class="cb-close">×</button>
+          <button class="cb-close" aria-label="Close">×</button>
         </div>
 
         <div class="cb-body">
           <div class="cb-messages" id="cb-messages">
             <div class="cb-intro" id="cb-intro">
               <svg viewBox="0 0 24 24">
-                <path fill="#6d4bf4" d="M12 2l1.8 4.8L18.6 9l-4.8 1.8L12 15.6l-1.8-4.8L5.4 9l4.8-2.2L12 2z"/>
+                <path fill="#6d4bf4"
+                  d="M12 2l1.8 4.8L18.6 9l-4.8 1.8L12 15.6l-1.8-4.8L5.4 9l4.8-2.2L12 2z"/>
               </svg>
               <h2>Ask AI anything</h2>
             </div>
@@ -76,11 +85,26 @@
 
         <div class="cb-footer">
           <div class="cb-input-shell">
-            <button id="cb-upload">📎</button>
-            <input id="cb-input" placeholder="Message…" />
-            <button id="cb-mic">🎤</button>
-            <button id="cb-send" class="cb-send-btn">
-              <svg viewBox="0 0 24 24"><path d="M4 20l16-8L4 4v6l9 2-9 2z"/></svg>
+            <!-- Upload (UI-ready) -->
+            <button id="cb-upload" title="Upload">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/>
+              </svg>
+            </button>
+
+            <input id="cb-input" placeholder="Message…" autocomplete="off"/>
+
+            <!-- Voice -->
+            <button id="cb-mic" title="Voice input">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm5-3a5 5 0 01-10 0H5a7 7 0 0014 0h-2z"/>
+              </svg>
+            </button>
+
+            <button id="cb-send" class="cb-send-btn" title="Send">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 20l16-8L4 4v6l9 2-9 2z"/>
+              </svg>
             </button>
           </div>
         </div>
@@ -96,28 +120,26 @@
     const micBtn = wrapper.querySelector("#cb-mic");
     const introEl = wrapper.querySelector("#cb-intro");
 
-    /* ================= VOICE INPUT (PHASE 1) ================= */
+    /* ================= VOICE INPUT (CONTINUOUS) ================= */
     const SpeechAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition = null;
-    let listening = false;
+    let voiceOn = false;
 
     if (SpeechAPI) {
       recognition = new SpeechAPI();
       recognition.lang = "en-US";
-      recognition.interimResults = true;
-      recognition.continuous = false;
+      recognition.continuous = true;
+      recognition.interimResults = false;
 
       recognition.onresult = (e) => {
-        let transcript = "";
-        for (let i = e.resultIndex; i < e.results.length; i++) {
-          transcript += e.results[i][0].transcript;
+        const text = e.results[e.results.length - 1][0].transcript.trim();
+        if (text) {
+          sendMessage(text);
         }
-        inputEl.value = transcript.trim();
       };
 
       recognition.onend = () => {
-        listening = false;
-        micBtn.classList.remove("cb-mic-active");
+        if (voiceOn) recognition.start(); // keep listening
       };
     } else {
       micBtn.style.display = "none";
@@ -125,20 +147,14 @@
 
     micBtn.addEventListener("click", () => {
       if (!recognition) return;
-      if (listening) {
-        recognition.stop();
-        listening = false;
-        micBtn.classList.remove("cb-mic-active");
-      } else {
-        recognition.start();
-        listening = true;
-        micBtn.classList.add("cb-mic-active");
-      }
+      voiceOn = !voiceOn;
+      micBtn.classList.toggle("voice-active", voiceOn);
+      voiceOn ? recognition.start() : recognition.stop();
     });
 
-    /* ================= ORIGINAL SEND LOGIC ================= */
-    async function sendMessage(){
-      const text = inputEl.value.trim();
+    /* ================= SEND LOGIC ================= */
+    async function sendMessage(forcedText){
+      const text = (forcedText || inputEl.value).trim();
       if (!text) return;
 
       if (introEl) introEl.remove();
@@ -173,7 +189,7 @@
     /* ================= EVENTS ================= */
     launcher.onclick = () => wrapper.style.display = "flex";
     closeBtn.onclick = () => wrapper.style.display = "none";
-    sendBtn.onclick = sendMessage;
+    sendBtn.onclick = () => sendMessage();
     inputEl.onkeydown = e => { if (e.key === "Enter") sendMessage(); };
   }
 })();
