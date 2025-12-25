@@ -101,35 +101,13 @@
   gap:14px;
 }
 
-/* Intro */
-.cb-intro{
-  text-align:center;
-  margin-top:90px;
-  color:var(--muted);
-}
-.cb-intro svg{
-  width:56px;
-  height:56px;
-  margin-bottom:18px;
-}
-.cb-intro h2{
-  font-size:18px;
-  font-weight:600;
-  color:var(--text);
-}
-
-/* ---------- Messages ---------- */
+/* Messages */
 .cb-msg{
   max-width:85%;
   padding:14px 18px;
   border-radius:18px;
   font-size:14px;
   line-height:1.55;
-}
-.cb-msg-bot{
-  background:var(--bot);
-  color:var(--text);
-  margin-right:auto;
 }
 .cb-msg-user{
   background:linear-gradient(135deg,var(--accent),var(--accent-dark));
@@ -138,76 +116,83 @@
   border-radius:999px;
   padding:10px 22px;
 }
+.cb-msg-bot{
+  background:var(--bot);
+  color:var(--text);
+  margin-right:auto;
+}
 
-/* ---------- Footer / Toolbar ---------- */
+/* ---------- Footer / Input ---------- */
 .cb-footer{
   padding:12px;
-  background:#fff;
   border-top:1px solid var(--border);
+  background:#fff;
 }
 
-.cb-toolbar{
+/* 🔑 THIS IS THE FIX */
+.cb-input-shell{
   display:flex;
   align-items:center;
-  gap:8px;
-  padding:6px 8px;
+  gap:10px;
   border:1px solid var(--border);
   border-radius:999px;
+  padding:8px 12px;
 }
 
-.cb-icon-btn{
-  width:32px;
-  height:32px;
+/* Icon buttons */
+.cb-input-shell button{
+  width:34px;
+  height:34px;
+  min-width:34px;
+  min-height:34px;
+  border:none;
+  background:none;
   border-radius:50%;
   display:flex;
   align-items:center;
   justify-content:center;
   cursor:pointer;
 }
-.cb-icon-btn svg{
+
+.cb-input-shell button svg{
   width:18px;
   height:18px;
   fill:#64748b;
 }
-.cb-icon-btn:hover{
+
+.cb-input-shell button:hover{
   background:#f1f5f9;
 }
 
 /* Voice active */
-.cb-icon-btn.voice-active{
+.cb-input-shell button.voice-active{
   background:rgba(109,75,244,.15);
 }
-.cb-icon-btn.voice-active svg{
-  fill:#6d4bf4;
+.cb-input-shell button.voice-active svg{
+  fill:var(--accent);
   animation:micPulse 1.4s infinite;
 }
+
 @keyframes micPulse{
   0%{transform:scale(1);opacity:.7}
   50%{transform:scale(1.2);opacity:1}
   100%{transform:scale(1);opacity:.7}
 }
 
-.cb-input{
+/* Text input */
+#cb-input{
   flex:1;
   border:none;
   outline:none;
   font-size:14px;
-  padding:8px 6px;
+  padding:6px 4px;
   background:transparent;
 }
 
+/* Send */
 .cb-send-btn{
-  width:36px;
-  height:36px;
-  border-radius:50%;
-  background:linear-gradient(135deg,var(--accent),var(--accent-dark));
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
+  background:linear-gradient(135deg,var(--accent),var(--accent-dark)) !important;
 }
 .cb-send-btn svg{
-  width:16px;
-  height:16px;
-  fill:#fff;
+  fill:#fff !important;
 }
