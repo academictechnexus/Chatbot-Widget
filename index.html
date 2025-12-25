@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Chatbot Widget Preview</title>
 
-  <!-- Page styles -->
+  <!-- Page styles (unchanged) -->
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -38,35 +38,27 @@
     footer { margin-top: 28px; color: #888; font-size: 13px; }
   </style>
 
-  <!-- Chatbot widget CSS (local file) -->
+  <!-- Chatbot widget CSS -->
   <link rel="stylesheet" href="./chatbot-widget.css">
 </head>
 <body>
 
   <h1>Chatbot Widget Hosted — Preview</h1>
-  <p>Scroll to the bottom-right — you should see the floating chat launcher. Click it to open the widget.</p>
+  <p>Scroll to the bottom-right — click the floating chat button.</p>
 
   <div class="box">
     <h2 style="margin-top:0">Embed instructions</h2>
-    <p>To embed this widget on any page, include the stylesheet in the <code>&lt;head&gt;</code> and the script before <code>&lt;/body&gt;</code> (or at the end of your body):</p>
     <pre style="background:#fafafa;padding:12px;border-radius:8px;border:1px solid #eee">
 &lt;link rel="stylesheet" href="./chatbot-widget.css"&gt;
-...
-&lt;script src="./chatbot-widget.js" data-plan="basic" data-token="YOUR_TOKEN_IF_ANY" data-site="example.com"&gt;&lt;/script&gt;
+&lt;script src="./chatbot-widget.js" data-plan="basic"&gt;&lt;/script&gt;
     </pre>
-
-    <p><strong>Note:</strong> If you serve assets from a subfolder (for example <code>/assets/</code>), update the paths accordingly.</p>
-
-    <p style="margin-top:8px">You can also open the widget programmatically from the console:</p>
-    <code>__mascotWidget.open()</code>
   </div>
 
   <footer>
-    Test tips: hard-refresh after upload (Ctrl+Shift+R), or open in an incognito window to avoid stale cache.
+    Test tip: hard-refresh (Ctrl+Shift+R) if CSS looks unchanged.
   </footer>
 
-  <!-- Chatbot widget script (local file) -->
-  <!-- Keep the data attributes if you want activation/plan behavior -->
+  <!-- Chatbot widget script (UNCHANGED) -->
   <script src="./chatbot-widget.js" data-plan="basic"></script>
 </body>
 </html>
