@@ -1,4 +1,4 @@
-/* chatbot-widget.js — FINAL STABLE (INPUT + UPLOAD FIXED) */
+/* chatbot-widget.js — STEP 1: Sparkle Thinking Indicator */
 
 (function () {
   "use strict";
@@ -29,10 +29,7 @@
     /* Launcher */
     const launcher = document.createElement("button");
     launcher.className = "cb-launcher";
-    launcher.innerHTML =
-      `<svg viewBox="0 0 24 24">
-        <path d="M12 2l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/>
-      </svg>`;
+    launcher.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 2l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg>`;
     document.body.appendChild(launcher);
 
     /* Widget */
@@ -58,26 +55,19 @@
 
         <div class="cb-footer">
           <div class="cb-context">🔒 Using this page content to answer</div>
-
           <div class="cb-input-shell">
-            <button id="cb-upload" title="Upload">
-              <svg viewBox="0 0 24 24">
-                <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/>
-              </svg>
+            <button id="cb-upload">
+              <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/></svg>
             </button>
 
-            <button id="cb-mic" title="Voice">
-              <svg viewBox="0 0 24 24">
-                <path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm5-3a5 5 0 01-10 0H5a7 7 0 0014 0h-2z"/>
-              </svg>
+            <button id="cb-mic">
+              <svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm5-3a5 5 0 01-10 0H5a7 7 0 0014 0h-2z"/></svg>
             </button>
 
             <input id="cb-input" type="text" placeholder="Message…" />
 
             <button id="cb-send" class="cb-send-btn">
-              <svg viewBox="0 0 24 24">
-                <path d="M4 20l16-8L4 4v6l9 2-9 2z"/>
-              </svg>
+              <svg viewBox="0 0 24 24"><path d="M4 20l16-8L4 4v6l9 2-9 2z"/></svg>
             </button>
           </div>
         </div>
@@ -88,7 +78,6 @@
     const msgs = wrapper.querySelector("#msgs");
     const input = wrapper.querySelector("#cb-input");
     const sendBtn = wrapper.querySelector("#cb-send");
-    const micBtn = wrapper.querySelector("#cb-mic");
     const uploadBtn = wrapper.querySelector("#cb-upload");
 
     /* Hidden file input */
@@ -110,7 +99,7 @@
 
     launcher.onclick = () => {
       wrapper.style.display = "flex";
-      setTimeout(() => input.focus(), 0);
+      input.focus();
       if(!msgs.hasChildNodes()){
         addBot("Hello! I'm your AI assistant. How can I help you today?");
       }
@@ -134,6 +123,10 @@
 
     async function send(text){
       addUser(text);
+
+      /* ✨ START sparkle */
+      wrapper.classList.add("cb-thinking");
+
       input.value = "";
       try{
         const r = await fetch(CHAT_API,{
@@ -145,6 +138,9 @@
         addBot(j.reply || j.message || "No response");
       }catch{
         addBot("Network error.");
+      }finally{
+        /* ✨ STOP sparkle */
+        wrapper.classList.remove("cb-thinking");
       }
     }
 
@@ -154,27 +150,5 @@
         send(input.value.trim());
       }
     });
-
-    /* Voice */
-    const SpeechAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if(SpeechAPI){
-      const recog = new SpeechAPI();
-      recog.lang = "en-US";
-      recog.continuous = true;
-      let voiceOn = false;
-
-      micBtn.onclick = () => {
-        voiceOn = !voiceOn;
-        micBtn.classList.toggle("cb-mic-active", voiceOn);
-        voiceOn ? recog.start() : recog.stop();
-      };
-
-      recog.onresult = e => {
-        const t = e.results[e.results.length - 1][0].transcript.trim();
-        if(t) send(t);
-      };
-
-      recog.onend = () => voiceOn && recog.start();
-    }
   }
 })();
