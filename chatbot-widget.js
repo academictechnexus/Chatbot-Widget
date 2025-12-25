@@ -1,4 +1,4 @@
-/* chatbot-widget.js — STEP 1: Sparkle Thinking Indicator */
+/* chatbot-widget.js — STREAMING + CENTER SPARKLE (META STYLE) */
 
 (function () {
   "use strict";
@@ -40,9 +40,7 @@
         <div class="cb-header">
           <div class="cb-header-left">
             <div class="cb-ai-icon">
-              <svg viewBox="0 0 24 24">
-                <path d="M12 2l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/>
-              </svg>
+              <svg viewBox="0 0 24 24"><path d="M12 2l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg>
             </div>
             AI Assistant
           </div>
@@ -50,6 +48,7 @@
         </div>
 
         <div class="cb-body">
+          <div class="cb-thinking-orb"></div>
           <div class="cb-messages" id="msgs"></div>
         </div>
 
@@ -59,13 +58,7 @@
             <button id="cb-upload">
               <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/></svg>
             </button>
-
-            <button id="cb-mic">
-              <svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm5-3a5 5 0 01-10 0H5a7 7 0 0014 0h-2z"/></svg>
-            </button>
-
             <input id="cb-input" type="text" placeholder="Message…" />
-
             <button id="cb-send" class="cb-send-btn">
               <svg viewBox="0 0 24 24"><path d="M4 20l16-8L4 4v6l9 2-9 2z"/></svg>
             </button>
@@ -80,22 +73,12 @@
     const sendBtn = wrapper.querySelector("#cb-send");
     const uploadBtn = wrapper.querySelector("#cb-upload");
 
-    /* Hidden file input */
+    /* File upload */
     const fileInput = document.createElement("input");
     fileInput.type = "file";
     fileInput.style.display = "none";
     document.body.appendChild(fileInput);
-
     uploadBtn.onclick = () => fileInput.click();
-    fileInput.onchange = async e => {
-      const f = e.target.files[0];
-      if(!f) return;
-      addBot(`Uploading ${f.name}…`);
-      const fd = new FormData();
-      fd.append("mascot", f, f.name);
-      await fetch(UPLOAD_API,{ method:"POST", body:fd });
-      addBot("Upload complete.");
-    };
 
     launcher.onclick = () => {
       wrapper.style.display = "flex";
@@ -123,23 +106,37 @@
 
     async function send(text){
       addUser(text);
-
-      /* ✨ START sparkle */
+      input.value = "";
       wrapper.classList.add("cb-thinking");
 
-      input.value = "";
       try{
         const r = await fetch(CHAT_API,{
           method:"POST",
           headers:{ "Content-Type":"application/json" },
           body:JSON.stringify({ sessionId, message:text })
         });
-        const j = await r.json();
-        addBot(j.reply || j.message || "No response");
+
+        /* 🔁 STREAM SUPPORT */
+        if(r.body && r.headers.get("content-type")?.includes("text")){
+          const reader = r.body.getReader();
+          const decoder = new TextDecoder();
+          let botMsg = document.createElement("div");
+          botMsg.className = "cb-msg cb-msg-bot";
+          msgs.appendChild(botMsg);
+
+          while(true){
+            const { value, done } = await reader.read();
+            if(done) break;
+            botMsg.innerHTML += esc(decoder.decode(value));
+            msgs.scrollTop = msgs.scrollHeight;
+          }
+        }else{
+          const j = await r.json();
+          addBot(j.reply || j.message || "No response");
+        }
       }catch{
         addBot("Network error.");
       }finally{
-        /* ✨ STOP sparkle */
         wrapper.classList.remove("cb-thinking");
       }
     }
