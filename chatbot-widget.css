@@ -13,7 +13,7 @@
   --font:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
 }
 
-/* Launcher */
+/* ---------- Launcher ---------- */
 .cb-launcher{
   position:fixed;
   bottom:22px;
@@ -31,7 +31,7 @@
 }
 .cb-launcher svg{width:22px;height:22px;fill:#fff}
 
-/* Widget */
+/* ---------- Wrapper ---------- */
 .cb-wrapper{
   position:fixed;
   bottom:96px;
@@ -53,7 +53,7 @@
   font-family:var(--font);
 }
 
-/* Header */
+/* ---------- Header ---------- */
 .cb-header{
   padding:18px 20px;
   display:flex;
@@ -86,7 +86,7 @@
   color:#475569;
 }
 
-/* Body */
+/* ---------- Body ---------- */
 .cb-body{
   flex:1;
   background:var(--page);
@@ -118,7 +118,7 @@
   color:var(--text);
 }
 
-/* Messages */
+/* ---------- Messages ---------- */
 .cb-msg{
   max-width:85%;
   padding:14px 18px;
@@ -139,47 +139,75 @@
   padding:10px 22px;
 }
 
-/* Typing */
-.cb-typing{display:flex;gap:6px}
-.cb-typing-dot{
-  width:6px;height:6px;border-radius:50%;
-  background:#94a3b8;
-  animation:blink 1.4s infinite both;
+/* ---------- Footer / Toolbar ---------- */
+.cb-footer{
+  padding:12px;
+  background:#fff;
+  border-top:1px solid var(--border);
 }
-.cb-typing-dot:nth-child(2){animation-delay:.2s}
-.cb-typing-dot:nth-child(3){animation-delay:.4s}
-@keyframes blink{0%{opacity:.25}20%{opacity:1}100%{opacity:.25}}
 
-/* Footer */
-.cb-footer{padding:14px;background:#fff}
-.cb-input-shell{
+.cb-toolbar{
   display:flex;
   align-items:center;
-  gap:10px;
+  gap:8px;
+  padding:6px 8px;
   border:1px solid var(--border);
   border-radius:999px;
-  padding:8px 12px;
 }
-.cb-input-shell button{
-  background:none;border:none;cursor:pointer;
-  font-size:18px;color:#64748b;
+
+.cb-icon-btn{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
 }
-#cb-input{flex:1;border:none;outline:none;font-size:14px}
+.cb-icon-btn svg{
+  width:18px;
+  height:18px;
+  fill:#64748b;
+}
+.cb-icon-btn:hover{
+  background:#f1f5f9;
+}
+
+/* Voice active */
+.cb-icon-btn.voice-active{
+  background:rgba(109,75,244,.15);
+}
+.cb-icon-btn.voice-active svg{
+  fill:#6d4bf4;
+  animation:micPulse 1.4s infinite;
+}
+@keyframes micPulse{
+  0%{transform:scale(1);opacity:.7}
+  50%{transform:scale(1.2);opacity:1}
+  100%{transform:scale(1);opacity:.7}
+}
+
+.cb-input{
+  flex:1;
+  border:none;
+  outline:none;
+  font-size:14px;
+  padding:8px 6px;
+  background:transparent;
+}
 
 .cb-send-btn{
-  width:38px;height:38px;border-radius:50%;
+  width:36px;
+  height:36px;
+  border-radius:50%;
   background:linear-gradient(135deg,var(--accent),var(--accent-dark));
-  display:flex;align-items:center;justify-content:center;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
 }
-.cb-send-btn svg{width:16px;height:16px;fill:#fff}
-
-/* 🎙 Voice listening state */
-.cb-mic-active{
-  color:var(--accent);
-  animation:pulse 1.4s infinite;
-}
-@keyframes pulse{
-  0%{transform:scale(1);opacity:.6}
-  50%{transform:scale(1.15);opacity:1}
-  100%{transform:scale(1);opacity:.6}
+.cb-send-btn svg{
+  width:16px;
+  height:16px;
+  fill:#fff;
 }
