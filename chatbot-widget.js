@@ -1,4 +1,4 @@
-/* chatbot-widget.js — STREAMING + CENTER SPARKLE (META STYLE) */
+/* chatbot-widget.js — META STYLE ORB + VOICE + DRAG UPLOAD */
 
 (function () {
   "use strict";
@@ -8,9 +8,7 @@
   const UPLOAD_API = `${API_BASE}/mascot/upload`;
   const KEY_SESSION = "mascot_session_id_v1";
 
-  function esc(s){
-    return s ? s.replace(/[&<>]/g,c=>({ "&":"&amp;","<":"&lt;",">":"&gt;" }[c])) : "";
-  }
+  const esc = s => s ? s.replace(/[&<>]/g,c=>({ "&":"&amp;","<":"&lt;",">":"&gt;" }[c])) : "";
 
   function getSession(){
     let s = localStorage.getItem(KEY_SESSION);
@@ -47,8 +45,9 @@
           <button id="cb-close">×</button>
         </div>
 
-        <div class="cb-body">
-          <div class="cb-thinking-orb"></div>
+        <div class="cb-body" id="cb-body">
+          <div class="cb-orb" id="cb-orb"></div>
+          <div class="cb-drop" id="cb-drop">Drop file to upload</div>
           <div class="cb-messages" id="msgs"></div>
         </div>
 
@@ -57,6 +56,9 @@
           <div class="cb-input-shell">
             <button id="cb-upload">
               <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/></svg>
+            </button>
+            <button id="cb-mic">
+              <svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm5-3a5 5 0 01-10 0H5a7 7 0 0014 0h-2z"/></svg>
             </button>
             <input id="cb-input" type="text" placeholder="Message…" />
             <button id="cb-send" class="cb-send-btn">
@@ -72,24 +74,52 @@
     const input = wrapper.querySelector("#cb-input");
     const sendBtn = wrapper.querySelector("#cb-send");
     const uploadBtn = wrapper.querySelector("#cb-upload");
+    const micBtn = wrapper.querySelector("#cb-mic");
+    const orb = wrapper.querySelector("#cb-orb");
+    const drop = wrapper.querySelector("#cb-drop");
+    const body = wrapper.querySelector("#cb-body");
 
-    /* File upload */
+    /* Initial orb visible */
+    orb.classList.remove("hidden");
+
+    /* Upload */
     const fileInput = document.createElement("input");
     fileInput.type = "file";
     fileInput.style.display = "none";
     document.body.appendChild(fileInput);
+
     uploadBtn.onclick = () => fileInput.click();
+    fileInput.onchange = e => handleFile(e.target.files[0]);
+
+    function handleFile(f){
+      if(!f) return;
+      addBot(`Uploading ${f.name}…`);
+      const fd = new FormData();
+      fd.append("mascot", f, f.name);
+      fetch(UPLOAD_API,{ method:"POST", body:fd })
+        .then(()=>addBot("Upload complete."));
+    }
+
+    /* Drag & Drop */
+    body.addEventListener("dragover", e => {
+      e.preventDefault();
+      drop.classList.add("active");
+    });
+    body.addEventListener("dragleave", () => drop.classList.remove("active"));
+    body.addEventListener("drop", e => {
+      e.preventDefault();
+      drop.classList.remove("active");
+      handleFile(e.dataTransfer.files[0]);
+    });
 
     launcher.onclick = () => {
       wrapper.style.display = "flex";
       input.focus();
-      if(!msgs.hasChildNodes()){
-        addBot("Hello! I'm your AI assistant. How can I help you today?");
-      }
     };
     wrapper.querySelector("#cb-close").onclick = () => wrapper.style.display = "none";
 
     function addUser(t){
+      orb.classList.add("hidden");
       const d = document.createElement("div");
       d.className = "cb-msg cb-msg-user";
       d.textContent = t;
@@ -107,7 +137,7 @@
     async function send(text){
       addUser(text);
       input.value = "";
-      wrapper.classList.add("cb-thinking");
+      orb.classList.remove("hidden");
 
       try{
         const r = await fetch(CHAT_API,{
@@ -116,28 +146,28 @@
           body:JSON.stringify({ sessionId, message:text })
         });
 
-        /* 🔁 STREAM SUPPORT */
-        if(r.body && r.headers.get("content-type")?.includes("text")){
+        if(r.body){
           const reader = r.body.getReader();
           const decoder = new TextDecoder();
-          let botMsg = document.createElement("div");
-          botMsg.className = "cb-msg cb-msg-bot";
-          msgs.appendChild(botMsg);
+          let bot = document.createElement("div");
+          bot.className = "cb-msg cb-msg-bot";
+          msgs.appendChild(bot);
 
           while(true){
             const { value, done } = await reader.read();
             if(done) break;
-            botMsg.innerHTML += esc(decoder.decode(value));
+            orb.classList.add("hidden");
+            bot.innerHTML += esc(decoder.decode(value));
             msgs.scrollTop = msgs.scrollHeight;
           }
         }else{
           const j = await r.json();
+          orb.classList.add("hidden");
           addBot(j.reply || j.message || "No response");
         }
       }catch{
+        orb.classList.add("hidden");
         addBot("Network error.");
-      }finally{
-        wrapper.classList.remove("cb-thinking");
       }
     }
 
@@ -147,5 +177,27 @@
         send(input.value.trim());
       }
     });
+
+    /* Voice */
+    const SpeechAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(SpeechAPI){
+      const recog = new SpeechAPI();
+      recog.lang = "en-US";
+      recog.continuous = true;
+      let voiceOn = false;
+
+      micBtn.onclick = () => {
+        voiceOn = !voiceOn;
+        micBtn.classList.toggle("cb-mic-active", voiceOn);
+        voiceOn ? recog.start() : recog.stop();
+      };
+
+      recog.onresult = e => {
+        const t = e.results[e.results.length - 1][0].transcript.trim();
+        if(t) send(t);
+      };
+
+      recog.onend = () => voiceOn && recog.start();
+    }
   }
 })();
