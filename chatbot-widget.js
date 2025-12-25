@@ -1,4 +1,4 @@
-/* chatbot-widget.js — FULL BASELINE PRESERVED + FINAL POLISH */
+/* chatbot-widget.js — FULL BASELINE PRESERVED + META POLISH (SAFE) */
 
 (function () {
   "use strict";
@@ -51,8 +51,12 @@
         </div>
 
         <div class="cb-body" id="cb-body">
-          <div class="cb-orb" id="cb-orb"></div>
-          <div class="cb-drop" id="cb-drop"></div>
+          <div class="cb-intro" id="cb-intro">
+            <h2>Hello!</h2>
+            <p>I’m your AI assistant. How can I help you today?</p>
+            <div class="cb-orb"></div>
+          </div>
+
           <div class="cb-messages" id="msgs"></div>
         </div>
 
@@ -71,8 +75,11 @@
               <svg viewBox="0 0 24 24"><path d="M4 20l16-8L4 4v6l9 2-9 2z"/></svg>
             </button>
           </div>
+
           <div class="cb-emoji" id="cb-emoji">
-            😀 😅 😂 🤔 👍 🎉 🚀 🔥 💡 ❤️
+            <span>😀</span><span>😅</span><span>😂</span><span>🤔</span>
+            <span>👍</span><span>🎉</span><span>🚀</span><span>🔥</span>
+            <span>💡</span><span>❤️</span>
           </div>
         </div>
       </div>
@@ -87,68 +94,28 @@
     const micBtn = wrapper.querySelector("#cb-mic");
     const emojiBtn = wrapper.querySelector("#cb-emoji-btn");
     const emojiBox = wrapper.querySelector("#cb-emoji");
-    const orb = wrapper.querySelector("#cb-orb");
-    const drop = wrapper.querySelector("#cb-drop");
+    const intro = wrapper.querySelector("#cb-intro");
     const body = wrapper.querySelector("#cb-body");
 
-    let greeted = false;
-
-    /* ================= INITIAL GREETING ================= */
-    function greetOnce() {
-      if (greeted) return;
-      greeted = true;
-      const d = document.createElement("div");
-      d.className = "cb-msg cb-msg-bot";
-      d.textContent = "Hello! I'm your AI assistant. How can I help you today?";
-      msgs.appendChild(d);
+    function removeIntro() {
+      if (intro) intro.remove();
     }
-
-    /* ================= UPLOAD ================= */
-    const fileInput = document.createElement("input");
-    fileInput.type = "file";
-    fileInput.style.display = "none";
-    document.body.appendChild(fileInput);
-
-    uploadBtn.onclick = () => fileInput.click();
-    fileInput.onchange = e => handleFile(e.target.files[0]);
-
-    function handleFile(f) {
-      if (!f) return;
-      addBot(`Uploading ${f.name}…`);
-      const fd = new FormData();
-      fd.append("mascot", f, f.name);
-      fetch(UPLOAD_API, { method: "POST", body: fd })
-        .then(() => addBot("Upload complete."))
-        .catch(() => addBot("Upload failed."));
-    }
-
-    body.addEventListener("dragover", e => {
-      e.preventDefault();
-      drop.classList.add("active");
-    });
-    body.addEventListener("dragleave", () => drop.classList.remove("active"));
-    body.addEventListener("drop", e => {
-      e.preventDefault();
-      drop.classList.remove("active");
-      handleFile(e.dataTransfer.files[0]);
-    });
 
     /* ================= OPEN / CLOSE ================= */
     launcher.onclick = () => {
       wrapper.style.display = "flex";
-      orb.classList.remove("hidden");
-      greetOnce();
       input.focus();
     };
     wrapper.querySelector("#cb-close").onclick = () => wrapper.style.display = "none";
 
     /* ================= MESSAGE HELPERS ================= */
     function addUser(t) {
-      orb.classList.add("hidden");
+      removeIntro();
       const d = document.createElement("div");
       d.className = "cb-msg cb-msg-user";
       d.textContent = t;
       msgs.appendChild(d);
+      msgs.scrollTop = msgs.scrollHeight;
     }
 
     function addBot(t) {
@@ -169,6 +136,41 @@
 
       msgs.scrollTop = msgs.scrollHeight;
     }
+
+    /* ================= FILE UPLOAD (CARD STYLE) ================= */
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.style.display = "none";
+    document.body.appendChild(fileInput);
+
+    uploadBtn.onclick = () => fileInput.click();
+
+    fileInput.onchange = e => {
+      const f = e.target.files[0];
+      if (!f) return;
+      removeIntro();
+
+      const card = document.createElement("div");
+      card.className = "cb-file";
+      card.innerHTML = `<strong>📄 ${f.name}</strong><div>Uploading…</div>`;
+      msgs.appendChild(card);
+      msgs.scrollTop = msgs.scrollHeight;
+
+      const fd = new FormData();
+      fd.append("mascot", f, f.name);
+      fetch(UPLOAD_API, { method: "POST", body: fd })
+        .then(() => card.querySelector("div").textContent = "Uploaded")
+        .catch(() => card.querySelector("div").textContent = "Upload failed");
+    };
+
+    body.addEventListener("dragover", e => e.preventDefault());
+    body.addEventListener("drop", e => {
+      e.preventDefault();
+      if (e.dataTransfer.files[0]) {
+        fileInput.files = e.dataTransfer.files;
+        fileInput.onchange({ target: fileInput });
+      }
+    });
 
     /* ================= SEND ================= */
     async function send(text) {
@@ -209,23 +211,27 @@
       if (e.key === "Enter" && input.value.trim()) send(input.value.trim());
     });
 
-    /* ================= EMOJI ================= */
+    /* ================= EMOJI (FIXED) ================= */
     emojiBtn.onclick = () => {
       emojiBox.style.display = emojiBox.style.display === "flex" ? "none" : "flex";
     };
     emojiBox.onclick = e => {
-      if (e.target.nodeType === 3) input.value += e.target.textContent.trim();
+      if (e.target.tagName === "SPAN") {
+        input.value += e.target.textContent;
+        input.focus();
+      }
     };
 
-    /* ================= VOICE (UNCHANGED, VERIFIED) ================= */
+    /* ================= VOICE WITH PREVIEW ================= */
     const SpeechAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechAPI) {
       const recog = new SpeechAPI();
       recog.lang = "en-US";
       recog.continuous = true;
-      recog.interimResults = false;
+      recog.interimResults = true;
 
       let voiceOn = false;
+      let preview = null;
 
       micBtn.onclick = () => {
         voiceOn = !voiceOn;
@@ -234,8 +240,20 @@
       };
 
       recog.onresult = e => {
-        const t = e.results[e.results.length - 1][0].transcript.trim();
-        if (t) send(t);
+        removeIntro();
+        const txt = e.results[e.results.length - 1][0].transcript;
+        if (!preview) {
+          preview = document.createElement("div");
+          preview.className = "cb-voice-preview";
+          msgs.appendChild(preview);
+        }
+        preview.textContent = txt;
+
+        if (e.results[e.results.length - 1].isFinal) {
+          preview.remove();
+          preview = null;
+          send(txt.trim());
+        }
       };
 
       recog.onend = () => voiceOn && recog.start();
