@@ -1,4 +1,4 @@
-/* chatbot-widget.js — META STYLE ORB + VOICE + DRAG UPLOAD */
+/* chatbot-widget.js — BASELINE PRESERVED + META START + FOLLOWUPS + EMOJI */
 
 (function () {
   "use strict";
@@ -8,13 +8,16 @@
   const UPLOAD_API = `${API_BASE}/mascot/upload`;
   const KEY_SESSION = "mascot_session_id_v1";
 
-  const esc = s => s ? s.replace(/[&<>]/g,c=>({ "&":"&amp;","<":"&lt;",">":"&gt;" }[c])) : "";
+  const DEMO_LEFT = window.__MASCOT_DEMO_REMAINING;
 
-  function getSession(){
+  const esc = s =>
+    s ? s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])) : "";
+
+  function getSession() {
     let s = localStorage.getItem(KEY_SESSION);
-    if(!s){
+    if (!s) {
       s = "sess-" + Math.random().toString(36).slice(2);
-      localStorage.setItem(KEY_SESSION,s);
+      localStorage.setItem(KEY_SESSION, s);
     }
     return s;
   }
@@ -22,15 +25,16 @@
   const sessionId = getSession();
   document.addEventListener("DOMContentLoaded", init);
 
-  function init(){
+  function init() {
 
-    /* Launcher */
+    /* ---------- Launcher ---------- */
     const launcher = document.createElement("button");
     launcher.className = "cb-launcher";
-    launcher.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 2l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg>`;
+    launcher.innerHTML =
+      `<svg viewBox="0 0 24 24"><path d="M12 2l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg>`;
     document.body.appendChild(launcher);
 
-    /* Widget */
+    /* ---------- Widget ---------- */
     const wrapper = document.createElement("div");
     wrapper.className = "cb-wrapper";
     wrapper.innerHTML = `
@@ -41,6 +45,7 @@
               <svg viewBox="0 0 24 24"><path d="M12 2l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg>
             </div>
             AI Assistant
+            ${DEMO_LEFT != null ? `<span class="cb-plan">· Demo ${DEMO_LEFT} left</span>` : ""}
           </div>
           <button id="cb-close">×</button>
         </div>
@@ -54,6 +59,7 @@
         <div class="cb-footer">
           <div class="cb-context">🔒 Using this page content to answer</div>
           <div class="cb-input-shell">
+            <button id="cb-emoji-btn">😊</button>
             <button id="cb-upload">
               <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/></svg>
             </button>
@@ -65,24 +71,37 @@
               <svg viewBox="0 0 24 24"><path d="M4 20l16-8L4 4v6l9 2-9 2z"/></svg>
             </button>
           </div>
+          <div class="cb-emoji" id="cb-emoji">
+            😀 😅 😂 🤔 👍 🎉 🚀 🔥 💡 ❤️
+          </div>
         </div>
       </div>
     `;
     document.body.appendChild(wrapper);
 
+    /* ---------- Elements ---------- */
     const msgs = wrapper.querySelector("#msgs");
     const input = wrapper.querySelector("#cb-input");
     const sendBtn = wrapper.querySelector("#cb-send");
     const uploadBtn = wrapper.querySelector("#cb-upload");
     const micBtn = wrapper.querySelector("#cb-mic");
+    const emojiBtn = wrapper.querySelector("#cb-emoji-btn");
+    const emojiBox = wrapper.querySelector("#cb-emoji");
     const orb = wrapper.querySelector("#cb-orb");
     const drop = wrapper.querySelector("#cb-drop");
     const body = wrapper.querySelector("#cb-body");
 
-    /* Initial orb visible */
-    orb.classList.remove("hidden");
+    let firstMessageSent = false;
 
-    /* Upload */
+    /* ---------- Initial Greeting ---------- */
+    function showInitialGreeting() {
+      const d = document.createElement("div");
+      d.className = "cb-msg cb-msg-bot";
+      d.textContent = "Hello! I'm your AI assistant. How can I help you today?";
+      msgs.appendChild(d);
+    }
+
+    /* ---------- Upload ---------- */
     const fileInput = document.createElement("input");
     fileInput.type = "file";
     fileInput.style.display = "none";
@@ -91,16 +110,16 @@
     uploadBtn.onclick = () => fileInput.click();
     fileInput.onchange = e => handleFile(e.target.files[0]);
 
-    function handleFile(f){
-      if(!f) return;
+    function handleFile(f) {
+      if (!f) return;
       addBot(`Uploading ${f.name}…`);
       const fd = new FormData();
       fd.append("mascot", f, f.name);
-      fetch(UPLOAD_API,{ method:"POST", body:fd })
-        .then(()=>addBot("Upload complete."));
+      fetch(UPLOAD_API, { method: "POST", body: fd })
+        .then(() => addBot("Upload complete."));
     }
 
-    /* Drag & Drop */
+    /* ---------- Drag & Drop ---------- */
     body.addEventListener("dragover", e => {
       e.preventDefault();
       drop.classList.add("active");
@@ -112,13 +131,20 @@
       handleFile(e.dataTransfer.files[0]);
     });
 
+    /* ---------- Open / Close ---------- */
     launcher.onclick = () => {
       wrapper.style.display = "flex";
+      if (!msgs.hasChildNodes()) {
+        orb.classList.remove("hidden");
+        showInitialGreeting();
+      }
       input.focus();
     };
     wrapper.querySelector("#cb-close").onclick = () => wrapper.style.display = "none";
 
-    function addUser(t){
+    /* ---------- Messages ---------- */
+    function addUser(t) {
+      firstMessageSent = true;
       orb.classList.add("hidden");
       const d = document.createElement("div");
       d.className = "cb-msg cb-msg-user";
@@ -126,61 +152,78 @@
       msgs.appendChild(d);
     }
 
-    function addBot(t){
+    function addBot(t) {
       const d = document.createElement("div");
       d.className = "cb-msg cb-msg-bot";
       d.innerHTML = esc(t);
       msgs.appendChild(d);
+
+      const f = document.createElement("div");
+      f.className = "cb-followups";
+      ["Summarize this", "Give examples", "Explain simply"].forEach(x => {
+        const b = document.createElement("button");
+        b.textContent = x;
+        b.onclick = () => send(x);
+        f.appendChild(b);
+      });
+      msgs.appendChild(f);
+
       msgs.scrollTop = msgs.scrollHeight;
     }
 
-    async function send(text){
+    async function send(text) {
       addUser(text);
       input.value = "";
-      orb.classList.remove("hidden");
 
-      try{
-        const r = await fetch(CHAT_API,{
-          method:"POST",
-          headers:{ "Content-Type":"application/json" },
-          body:JSON.stringify({ sessionId, message:text })
+      try {
+        const r = await fetch(CHAT_API, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId, message: text })
         });
 
-        if(r.body){
+        if (r.body) {
           const reader = r.body.getReader();
           const decoder = new TextDecoder();
           let bot = document.createElement("div");
           bot.className = "cb-msg cb-msg-bot";
           msgs.appendChild(bot);
 
-          while(true){
+          while (true) {
             const { value, done } = await reader.read();
-            if(done) break;
-            orb.classList.add("hidden");
+            if (done) break;
             bot.innerHTML += esc(decoder.decode(value));
             msgs.scrollTop = msgs.scrollHeight;
           }
-        }else{
+        } else {
           const j = await r.json();
-          orb.classList.add("hidden");
           addBot(j.reply || j.message || "No response");
         }
-      }catch{
-        orb.classList.add("hidden");
+      } catch {
         addBot("Network error.");
       }
     }
 
     sendBtn.onclick = () => input.value.trim() && send(input.value.trim());
     input.addEventListener("keydown", e => {
-      if(e.key === "Enter" && input.value.trim()){
+      if (e.key === "Enter" && input.value.trim()) {
         send(input.value.trim());
       }
     });
 
-    /* Voice */
+    /* ---------- Emoji ---------- */
+    emojiBtn.onclick = () => {
+      emojiBox.style.display = emojiBox.style.display === "flex" ? "none" : "flex";
+    };
+    emojiBox.onclick = e => {
+      if (e.target.nodeType === 3) {
+        input.value += e.target.textContent.trim();
+      }
+    };
+
+    /* ---------- Voice (UNCHANGED LOGIC) ---------- */
     const SpeechAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if(SpeechAPI){
+    if (SpeechAPI) {
       const recog = new SpeechAPI();
       recog.lang = "en-US";
       recog.continuous = true;
@@ -194,7 +237,7 @@
 
       recog.onresult = e => {
         const t = e.results[e.results.length - 1][0].transcript.trim();
-        if(t) send(t);
+        if (t) send(t);
       };
 
       recog.onend = () => voiceOn && recog.start();
