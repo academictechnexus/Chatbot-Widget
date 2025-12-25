@@ -158,3 +158,17 @@
 
 /* Tooltip */
 .cb-input-shell button[title]{position:relative}
+/* --- FIX: input always editable --- */
+#cb-input{
+  pointer-events:auto !important;
+  user-select:text !important;
+  caret-color: var(--text);
+}
+
+/* --- Voice preview styling stays separate --- */
+.cb-voice-preview{
+  font-style:italic;
+  color:var(--muted);
+}
+
+
