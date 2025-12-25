@@ -70,15 +70,8 @@
   display:flex;align-items:center;justify-content:center;
 }
 .cb-ai-icon svg{width:16px;height:16px;fill:var(--accent)}
-.cb-header-actions{
-  display:flex;
-  gap:10px;
-}
 .cb-header-actions button{
-  background:none;border:none;cursor:pointer;
-}
-.cb-header-actions svg{
-  width:18px;height:18px;fill:#64748b;
+  background:none;border:none;cursor:pointer;font-size:18px;
 }
 
 /* Body */
@@ -115,9 +108,17 @@
   margin-right:auto;
 }
 
+/* Context indicator (Phase 3) */
+.cb-context{
+  font-size:12px;
+  color:var(--muted);
+  padding:6px 4px 0;
+  text-align:center;
+}
+
 /* Footer */
 .cb-footer{
-  padding:12px;
+  padding:10px 12px;
   border-top:1px solid var(--border);
   background:#fff;
 }
@@ -145,6 +146,7 @@
   outline:none;
   font-size:14px;
   padding:6px;
+  background:transparent;
 }
 .cb-send-btn{
   background:linear-gradient(135deg,var(--accent),var(--accent-dark)) !important;
